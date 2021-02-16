@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Script: Moodle--CLEAN
+# Description: Removes  WEB_DOCUMENTROOT
+# Params:
+#  - WEB_DOCUMENTROOT
+#  - WIRIS_MOODLE_BRANCH
+
+
+# Step01. Set up variables and paramaters. 
+echo "Setting up variables and paramaters"
+export MOODLE_DOCKER_DB="mysql"
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: WEB_DOCUMENTROOT environment variable is not set or not an existing directory.'
+    exit 1
+fi
+
+# (parameter) Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: WIRIS_MOODLE_BRANCH environment variable is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+# Step02. Removing WIRIS Quizzes plugins.
+echo "=> Removing folder ${MOODLE_DOCKER_WWWROOT}/ ..."
+cd ${WEB_DOCUMENTROOT}
+rm -rf ${WIRIS_MOODLE_BRANCH}

@@ -1,0 +1,191 @@
+#!/bin/bash
+
+# Script: Moodle--branch
+# Description: Creates a new branch taking an argument.
+# Requires dev mode on.
+
+# Params:
+# - Branch name.
+# - Dev mode on?
+
+echo "===================================================================================="
+echo "=> Branching is starting. wiris-moodle-docker: Docker Containers for Moodle Developers <="
+echo "===================================================================================="
+
+
+# Step01. Set up variables and paramaters. 
+echo "=> 1/5: Setting up variables and paramaters"
+
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied: you need to pass at least 1 parameter for the branch name"
+    exit 1;
+else
+    export WIRIS_MOODLE_MATHTYPE_BRANCH="master"
+    export WIRIS_MOODLE_MATHTYPE_NEW=$1
+    echo "New MATHTYPE BRANCH argument supplied and set to $1"
+fi
+
+
+export WIRIS_MOODLE_QUIZZES_BRANCH="stable"
+if [ -z "$2" ]
+  then
+    echo "No QUIZZES BRANCH argument supplied"
+    export WIRIS_MOODLE_QUIZZES_NEW="stable"
+else
+    export WIRIS_MOODLE_MATHTYPE_NEW=$2
+    echo "New QUIZZES BRANCH argument supplied and set to $2"
+fi
+
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: WEB_DOCUMENTROOT environment variable is not set or not an existing directory.'
+    exit 1
+fi
+
+# (parameter) Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: WIRIS_MOODLE_BRANCH environment variable is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+cd ${WEB_DOCUMENTROOT}
+if [ ! -d "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo "=> Error: Moodle does no exist, run the install command before start."
+    exit 2
+fi
+
+
+# (parameter) Which mode to clone Moodle MathType plugins.
+if [ $WIRIS_MOODLE_MATHTYPE_DEV_MODE = "off" ];
+then
+    echo '=> Error: WIRIS_MOODLE_MATHTYPE_DEV_MODE environment variable is set to off. Setting default to "on" for this session.'
+    exit 5
+fi
+
+if [ ! -d "${MOODLE_DOCKER_WWWROOT}" ]; then
+    echo "=> Error: Moodle does no exist, run the install command before start."
+    exit 6
+fi
+
+
+WIRIS_GIT_TRANSPORT="git@github.com:wiris"
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+
+# Using this workarond since bash version on MacOS, <4, does not support associative arrays 
+# @see: https://stackoverflow.com/questions/6047648/associative-arrays-error-declare-a-invalid-option
+WIRIS_MOODLE_QUIZZES_PLUGINS=(
+    'moodle-local_wirisquizzes::local/wirisquizzes'
+    'moodle-qtype_wq::question/type/wq'
+    'moodle-qtype_truefalsewiris::question/type/truefalsewiris'
+    'moodle-qtype_shortanswerwiris::question/type/shortanswerwiris'
+    'moodle-qtype_multichoicewiris::question/type/multichoicewiris'
+    'moodle-qtype_multianswerwiris::question/type/multianswerwiris'
+    'moodle-qtype_matchwiris::question/type/matchwiris'
+    'moodle-qtype_essaywiris::question/type/essaywiris'
+)
+WIRIS_MOODLE_MATHTYPE_PLUGINS=(
+    'moodle-filter_wiris::filter/wiris'
+    'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
+    'moodle-tinymce_tiny_mce_wiris::lib/editor/tinymce/plugins/tiny_mce_wiris'
+)
+
+# Clone Official Moodle repository
+cd ${WEB_DOCUMENTROOT}
+cd ${WIRIS_MOODLE_BRANCH}
+
+# Step04. Download WIRIS MathType plugins in development mode.
+echo "=> 4/5: Downloading WIRIS MathType plugins to ${MOODLE_DOCKER_WWWROOT}/ ..."
+# Workaround to support associative arrays on bash <4 ( MacOSx )
+if [ ${WIRIS_MOODLE_MATHTYPE_BRANCH} = ${WIRIS_MOODLE_MATHTYPE_NEW} ];
+then
+    echo "=> No new branch to create for MATHTYPE..."
+    for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
+        MATHTYPE_PLUGIN="${plugin%%::*}"
+        MATHTYPE_PLUGIN_TARGET="${plugin##*::}"
+        if [ -d "${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}" ]; then
+            echo "=> Pulling $MATHTYPE_PLUGIN..."
+            cd ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+            git checkout ${WIRIS_MOODLE_MATHTYPE_BRANCH} 
+            git pull 
+            cd ${MOODLE_DOCKER_WWWROOT}
+        else
+            echo "=> Cloning $MATHTYPE_PLUGIN..."
+            git clone -b ${WIRIS_MOODLE_MATHTYPE_BRANCH} ${WIRIS_GIT_TRANSPORT}/$MATHTYPE_PLUGIN ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+        fi
+    done
+else
+    for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
+        MATHTYPE_PLUGIN="${plugin%%::*}"
+        MATHTYPE_PLUGIN_TARGET="${plugin##*::}"
+        if [ -d "${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}" ]; then
+            echo "=> Pulling $MATHTYPE_PLUGIN..."
+            cd ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+            git fetch
+            git checkout ${WIRIS_MOODLE_MATHTYPE_BRANCH} 
+            git pull
+            echo "=> Creating new branch $WIRIS_MOODLE_MATHTYPE_NEW..."
+            git checkout -b ${WIRIS_MOODLE_MATHTYPE_NEW} 
+            cd ${MOODLE_DOCKER_WWWROOT}
+        else
+            echo "=> Cloning $MATHTYPE_PLUGIN..."
+            git clone -b ${WIRIS_MOODLE_MATHTYPE_BRANCH} ${WIRIS_GIT_TRANSPORT}/$MATHTYPE_PLUGIN ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+            git checkout -b ${WIRIS_MOODLE_MATHTYPE_NEW} 
+            cd ${MOODLE_DOCKER_WWWROOT}
+        fi
+    done
+fi
+# Step05. Download WIRIS Quizzes plugins.
+echo "=> 5/5: Downloading WIRIS Quizzes plugins to ${MOODLE_DOCKER_WWWROOT}/ ..."
+if [ ${WIRIS_MOODLE_QUIZZES_BRANCH} = ${WIRIS_MOODLE_QUIZZES_NEW} ];
+then
+    echo "=> No new branch to create for QUIZZES..."
+    for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
+        QUIZZES_PLUGIN="${plugin%%::*}"
+        QUIZZES_PLUGIN_TARGET="${plugin##*::}"
+        if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
+            echo "=> Pulling $QUIZZES_PLUGIN..."
+            cd ${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}
+            git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
+            git pull 
+            cd ${MOODLE_DOCKER_WWWROOT}
+        else
+            echo "=> Cloning $QUIZZES_PLUGIN..."
+            git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_DOCKER_WWWROOT}/$QUIZZES_PLUGIN_TARGET
+        fi
+    done
+else
+    # Workaround to support associative arrays on bash <4 ( MacOSx )
+    for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
+        QUIZZES_PLUGIN="${plugin%%::*}"
+        QUIZZES_PLUGIN_TARGET="${plugin##*::}"
+        if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
+            echo "=> Pulling $QUIZZES_PLUGIN..."
+            cd ${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}
+            git fetch
+            git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
+            git pull 
+            echo "=> Creating new branch $WIRIS_MOODLE_QUIZZES_NEW..."
+            git checkout -b ${WIRIS_MOODLE_QUIZZES_NEW} 
+            cd ${MOODLE_DOCKER_WWWROOT}
+        else
+            echo "=> Cloning $QUIZZES_PLUGIN..."
+            git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_DOCKER_WWWROOT}/$QUIZZES_PLUGIN_TARGET
+            git checkout -b ${WIRIS_MOODLE_QUIZZES_NEW} 
+            cd ${MOODLE_DOCKER_WWWROOT}
+        fi
+    done
+fi
+
+
+echo "======================================================================================="
+echo "=> Branch is finished. The new branch, if it's the case, have been created locally.  <="
+echo "======================================================================================="
+

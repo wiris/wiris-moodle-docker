@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Script: Moodle--stop
+# Description: Stops all Docker Moodle instances
+# Params:
+#  - WEB_DOCUMENTROOT
+#  - WIRIS_MOODLE_BRANCH
+
+# Step01. Set up variables and paramaters. 
+echo "Setting up variables and parameters"
+export MOODLE_DOCKER_DB="mysql"
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: $WEB_DOCUMENTROOT is not set or not an existing directory.'
+    exit 1
+fi
+
+# Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+# Step02. Shut down and destroy containers
+echo "=> Stopping docker containers..."
+if [ ! -d "moodle-docker" ]; then
+    # Control will enter here if $DIRECTORY doesn't exists.
+    echo "=> Error: Moodle docker does no exist, therefore it cannot be stopped."
+    exit 1
+else
+    cd moodle-docker
+    # Stopping containers
+    bin/moodle-docker-compose down
+    echo "=> Containers are down."
+fi

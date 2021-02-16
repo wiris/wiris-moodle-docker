@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Script: Moodle--BUILD
+# Description: It downloads the Official Docker Container from github, set it up and starts 
+#              the instances. Then, loads a database backup (/databases/moodle35-backup.sql)
+#              and runs the Moodle's upgrade script.
+# Params:
+# - Moodle version
+# - PHP version
+# - Development branch for MathType plugins
+
+echo "====================================================================================="
+echo "=> Build is starting. wiris-moodle-docker: Docker Containers for Moodle Developers <="
+echo "====================================================================================="
+
+
+# Step01. Set up variables and paramaters. 
+echo "=> 1/5: Setting up variables and paramaters"
+export MOODLE_DOCKER_DB="mysql"
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: $WEB_DOCUMENTROOT is not set or not an existing directory.'
+    exit 1
+fi
+
+# Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+# (Moodle-docker) Choose a db server (Currently supported: pgsql, mariadb, mysql, mssql, oracle).
+export MOODLE_DOCKER_DB="mysql"
+
+# Set up the PHP version
+if [ -z "$MOODLE_DOCKER_PHP_VERSION" ];
+then
+    echo '=> Warning: MOODLE_DOCKER_PHP_VERSION is not set. Setting default to "7.4" for this session.'
+    export MOODLE_DOCKER_PHP_VERSION="7.3"
+fi
+
+# Prepare the database file to import from for a faster upgrade path.
+if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
+    WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql"
+else
+    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_35_STABLE.sql"
+fi
+cp ${WIRIS_MOODLE_IMPORTED_DB} /tmp/database.sql
+
+# Step02. Validations on 'moodle' and 'moodle-docker'.
+
+# Check that the moodle-docker project is present.
+if [ ! -d "${MOODLE_DOCKER_WWWROOT}" ]; then
+    echo "=> Error: Moodle does no exist, run the install command before start."
+    exit 1
+fi
+
+if [ ! -d "moodle-docker" ]; then
+    echo "=> Error: Moodle docker does no exist, run the install command before start."
+    exit 1
+fi
+
+# Ensure customized config.php for the Docker containers is in place
+echo "=> Setting up Moodle Docker configuration..."
+cd moodle-docker
+cp config.docker-template.php ${MOODLE_DOCKER_WWWROOT}/config.php
+echo "=> Configuration is set."
+
+# Start up containers
+echo "=> Starting docker containers..."
+bin/moodle-docker-compose up -d
+echo "=> Containers are up."
+
+# Wait for DB to come up
+echo "=> Waiting for container db..."
+bin/moodle-docker-wait-for-db
+echo "=> Container db is ready."
+
+# Restore database
+echo "=> Restoring database from WIRIS backup ${WIRIS_MOODLE_IMPORTED_DB}..."
+bin/moodle-docker-compose exec -T db mysql -umoodle -pm@0dl3ing moodle < /tmp/database.sql
+echo "=> Database restored."
+
+echo "=> Upgrading Moodle..."
+bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
+echo "=> Moodle upgraded."
+
+echo "==============================================================================================="
+echo "=> Build is finished. Visit your ${WIRIS_MOODLE_BRANCH} (PHP_${MOODLE_DOCKER_PHP_VERSION}) Instance at http://localhost:8000/."
+echo "==============================================================================================="

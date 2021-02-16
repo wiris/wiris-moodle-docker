@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Script: Moodle--stop
+# Description: Stops all Docker Moodle instances
+# Params:
+#  - WEB_DOCUMENTROOT
+#  - WIRIS_MOODLE_BRANCH
+
+# Step01. Set up variables and paramaters. 
+echo "Setting up variables and paramaters"
+export MOODLE_DOCKER_DB="mysql"
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: $WEB_DOCUMENTROOT is not set or not an existing directory.'
+    exit 1
+fi
+
+# Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+# Step02. Shut down and destroy containers
+echo "=> Starting docker containers..."
+if [ ! -d "moodle-docker" ]; then
+    # Control will enter here if $DIRECTORY doesn't exists.
+    echo "=> Error: Moodle docker does no exist, therefore it cannot be stopped."
+    exit 1
+else
+    cd moodle-docker
+
+    # Stopping containers
+    bin/moodle-docker-compose down
+    echo "=> Containers are down."
+
+    # Start up containers
+    bin/moodle-docker-compose up -d
+    echo "=> Containers are up."
+
+    # Wait for DB to come up
+    echo "=> Waiting for container db..."
+    bin/moodle-docker-wait-for-db
+    echo "=> Container db is ready."
+    echo "=> Docker containers are up: visit your WIRIS_MOODLE_BRANCH Instance at http://localhost:8000/."
+fi

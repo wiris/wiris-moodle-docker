@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Script: Moodle--CLEAN
+# Description: Removes  WEB_DOCUMENTROOT
+# Params:
+#  - WEB_DOCUMENTROOT
+#  - WIRIS_MOODLE_BRANCH
+
+
+# Step01. Set up variables and paramaters. 
+echo "Setting up variables and parameters"
+export MOODLE_DOCKER_DB="mysql"
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: WEB_DOCUMENTROOT environment variable is not set or not an existing directory.'
+    exit 1
+fi
+
+# (parameter) Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: WIRIS_MOODLE_BRANCH environment variable is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+# Using this workarond since bash version on MacOS, <4, does not support associative arrays 
+# @see: https://stackoverflow.com/questions/6047648/associative-arrays-error-declare-a-invalid-option
+WIRIS_MOODLE_QUIZZES_PLUGINS=(
+    'moodle-local_wirisquizzes::local/wirisquizzes'
+    'moodle-qtype_wq::question/type/wq'
+    'moodle-qtype_truefalsewiris::question/type/truefalsewiris'
+    'moodle-qtype_shortanswerwiris::question/type/shortanswerwiris'
+    'moodle-qtype_multichoicewiris::question/type/multichoicewiris'
+    'moodle-qtype_multianswerwiris::question/type/multianswerwiris'
+    'moodle-qtype_matchwiris::question/type/matchwiris'
+    'moodle-qtype_essaywiris::question/type/essaywiris'
+)
+WIRIS_MOODLE_MATHTYPE_PLUGINS=(
+    'moodle-filter_wiris::filter/wiris'
+    'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
+    'moodle-tinymce_tiny_mce_wiris::lib/editor/tinymce/plugins/tiny_mce_wiris'
+)
+
+# Step02. Removing WIRIS Quizzes plugins.
+echo "=> Removing WIRIS Quizzes plugins to ${MOODLE_DOCKER_WWWROOT}/ ..."
+# Workaround to support associative arrays on bash <4 ( MacOSx )
+for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
+    QUIZZES_PLUGIN="${plugin%%::*}"
+    QUIZZES_PLUGIN_TARGET="${plugin##*::}"
+    if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
+        echo "=> Removing Quizzes $QUIZZES_PLUGIN..."
+        rm -rf ${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}
+    else
+        echo "=> Error: Plugin Quizzes $QUIZZES_PLUGIN not found."
+    fi
+done
+
+# Step02. Removing WIRIS MathType plugins.
+echo "=> Removing WIRIS MathType plugins to ${MOODLE_DOCKER_WWWROOT}/ ..."
+# Workaround to support associative arrays on bash <4 ( MacOSx )
+for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
+    MATHTYPE_PLUGIN="${plugin%%::*}"
+    MATHTYPE_PLUGIN_TARGET="${plugin##*::}"
+    if [ -d "${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}" ]; then
+        echo "=> Removing MathType $MATHTYPE_PLUGIN..."
+        rm -rf ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+    else
+        echo "=> Error: Plugin MathType $MATHTYPE_PLUGIN not found."
+    fi
+done

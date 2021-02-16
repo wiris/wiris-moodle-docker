@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Script: Moodle--BehatTestsInit
+# Description: Initialize behat environment.
+
+echo "=> Starting phpunit & behat environments..."
+
+# Step01. Set up variables and paramaters. 
+echo "=> 1/4: Setting up variables and paramaters"
+export MOODLE_DOCKER_DB="mysql"
+
+
+# (parameter) Path to store the Moodle code.
+if [ ! -d "$WEB_DOCUMENTROOT" ];
+then
+    echo '=> Error: $WEB_DOCUMENTROOT is not set or not an existing directory.'
+    exit 1
+fi
+
+# Set up the Moodle version to download using the branch name convention.
+if [ -z "$WIRIS_MOODLE_BRANCH" ];
+then
+    echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_39_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+fi
+
+# (Moodle-docker) Set up path to Moodle code
+export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
+
+if [ ! -d "moodle-docker" ]; then
+    echo "=> Error: Moodle docker does no exist, run the install command before start."
+    exit 1
+fi
+
+# Step02. Initialize behat environment
+echo "=> 2/4: Starting behat environment..."
+
+cd moodle-docker
+bin/moodle-docker-compose exec webserver php admin/tool/behat/cli/init.php
+echo "=> behat environment is up."
+
+# Run behat tests
+echo "=> 3/4: Starting running all MathType tests on behat..."
+bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@wiris_mathtype -vvv --colors
+echo "=> All behat MathType tests are done."
+
+# Step03. Initialize phpunit environment
+echo "=> 4/4: Starting phpunit environment..."
+
+# Initialize phpunit environment
+bin/moodle-docker-compose exec webserver php admin/tool/phpunit/cli/init.php
+echo "=> phpunit is up."
+
+# Run phpunit tests
+# bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
+# bin/moodle-docker-compose exec webserver vendor/bin/phpunit filter/wiris/tests/filter_performance_png_test.php
+
+echo "===================================================================="
+echo "=> phpunit & behat environments are available. You can run tests now."
+echo "===================================================================="
