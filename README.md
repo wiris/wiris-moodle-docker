@@ -79,6 +79,7 @@ export WIRIS_MOODLE_BRANCH="MOODLE_310_STABLE"
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
 # 03. Set a db server (We use mysql to import dummy data).
+# Needs to be set to 'mysql'; dig 'moodle-docker' project for more details.
 export MOODLE_DOCKER_DB="mysql"
 
 # 04. Set whether you want to download the code from github using ssh (authenticated) or https. 
@@ -125,7 +126,7 @@ There are three groups of commands, depending on which step on the installation 
 **Command list**
 
 | Command   | Description                                             | Subcommands       |
-|-----------|---------------------------------------------------------|-------------------|
+| --------- | ------------------------------------------------------- | ----------------- |
 | `install` | Downloads the Moodle code to your computer              | `clean`, `delete` |
 | `start`   | Starts a ready-to-use Moodle instance on your computer  | `restart`, `stop` |
 | `test`    | Runs all available automated tests on behat and phpunit | `test-init`       |
@@ -194,11 +195,23 @@ $ ./bin/wiris-moodle-docker-test-init
 
 ```
 
+**Using VNC to view running tests**
+
+If `MOODLE_DOCKER_SELENIUM_VNC_PORT` is defined, selenium will expose a VNC session on the port specified so behat tests can be viewed in progress.
+
+For example, if you set `MOODLE_DOCKER_SELENIUM_VNC_PORT` to 5900.
+
+1. Download a VNC client: https://www.realvnc.com/en/connect/download/viewer/
+2. With the containers running, enter 0.0.0.0:5900 as the port in VNC Viewer. You will be prompted for a password. The password is `'secret'`.
+3. You should be able to see an empty Desktop. When you run any Behat tests a browser will popup and you will see the tests execute.
+
+
 > **Notes:**
 > 
 > - The behat faildump directory is exposed at http://localhost:8000/_/faildumps/.
 > - If you want to run phpunit tests with coverage report, use command: `./moodle-docker/bin/moodle-docker-compose exec webserver phpdbg -qrr vendor/bin/phpunit --coverage-text auth_manual_testcase auth/manual/tests/manual_test.php`
 > - If `MOODLE_DOCKER_SELENIUM_VNC_PORT` is defined, selenium will expose a VNC session on the port specified so behat tests can be viewed in progress; [more information](https://github.com/moodlehq/moodle-docker#using-vnc-to-view-behat-tests).
+
 
 ### Scripts in action
 
@@ -287,7 +300,7 @@ You will need to update the value of the `WIRIS_MOODLE_BRANCH` variable and run 
 There are these three users for you to try the Moodle instance:
 
 | Role              | User    | Password   |
-|-------------------|---------|------------|
+| ----------------- | ------- | ---------- |
 | **Administrator** | admin   | admin@A1   |
 | **Teacher**       | teacher | teacher@A1 |
 | **Student**       | student | student@A1 |
