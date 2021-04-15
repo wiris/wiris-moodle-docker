@@ -78,17 +78,13 @@ export WIRIS_MOODLE_BRANCH="MOODLE_310_STABLE"
 # Recommended.
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
-# 03. Set a db server (We use mysql to import dummy data).
-# Needs to be set to 'mysql'; dig 'moodle-docker' project for more details.
-export MOODLE_DOCKER_DB="mysql"
-
-# 04. Set whether you want to download the code from github using ssh (authenticated) or https. 
+# 03. Set whether you want to download the code from github using ssh (authenticated) or https. 
 # Defaults to 'off' (https). Set to 'on' for 'ssh'.
 # Note: you will need to set up your default ssh credentials on your profile at GitHub.
 # For developers.
 export WIRIS_MOODLE_MATHTYPE_DEV_MODE="on" 
 
-# 05. Selenium will expose a VNC session on this port.
+# 04. Selenium will expose a VNC session on this port.
 # Recommended.
 export MOODLE_DOCKER_SELENIUM_VNC_PORT=5900
 ```
@@ -188,7 +184,7 @@ $ ./bin/wiris-moodle-docker-test-init
 
 # Then, you'll be able to run phpunit and behat tests of any plugin:
 # Example: Run some behat tests by @tag.
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@filter_wiris
+./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@filter_wiris
 
 # Example: Run a phpunit tests
 ./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
