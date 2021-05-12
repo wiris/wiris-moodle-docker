@@ -127,12 +127,12 @@ for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
         echo "=> Pulling $MATHTYPE_PLUGIN..."
         cd ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
         git pull 
-        git checkout master
+        git checkout main
         git checkout -b ${WIRIS_MOODLE_MATHTYPE_BRANCH} 
         cd ${MOODLE_DOCKER_WWWROOT}
     else
         echo "=> Cloning $MATHTYPE_PLUGIN..."
-        git clone -b master ${WIRIS_GIT_TRANSPORT}/$MATHTYPE_PLUGIN ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+        git clone -b main ${WIRIS_GIT_TRANSPORT}/$MATHTYPE_PLUGIN ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
         git checkout -b ${WIRIS_MOODLE_MATHTYPE_BRANCH} 
         cd ${MOODLE_DOCKER_WWWROOT}
     fi
