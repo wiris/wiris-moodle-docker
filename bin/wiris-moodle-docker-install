@@ -64,8 +64,8 @@ export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 # The branch to download Moodle Quizzes plugins from.
 if [ -z "$WIRIS_MOODLE_QUIZZES_BRANCH" ];
 then
-    echo '=> Warning: WIRIS_MOODLE_QUIZZES_BRANCH environment variable is not set. Setting default to "stable" for this session.'
-    export WIRIS_MOODLE_QUIZZES_BRANCH="stable"
+    echo '=> Warning: WIRIS_MOODLE_QUIZZES_BRANCH environment variable is not set. Setting default to "main" for this session.'
+    export WIRIS_MOODLE_QUIZZES_BRANCH="main"
 else
     echo '=> Preparing to pull Quizzes Moodle plugins source code from '${WIRIS_MOODLE_QUIZZES_BRANCH}' branch.'
 fi

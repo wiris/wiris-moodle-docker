@@ -100,9 +100,9 @@ There are some configuration settings that you may need to set from the Terminal
 export WIRIS_MOODLE_MATHTYPE_BRANCH="stable" 
 
 # 02. Set the Quizzes plugins branch to downlowad code from on the next install.
-# Defaults to 'stable' if not set as environment variable.
+# Defaults to 'main' if not set as environment variable.
 # Optional, not needed.
-export WIRIS_MOODLE_QUIZZES_BRANCH="stable"
+export WIRIS_MOODLE_QUIZZES_BRANCH="main"
 
 # 03. Set the PHP version to install on the next build. 
 # Defaults to PHP7_4 if not set as environment variable.
