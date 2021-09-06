@@ -72,7 +72,7 @@ We recommend you to add these values to your `.bashrc` file, so you don't need t
 export WEB_DOCUMENTROOT=/path/to/source/code
 
 # 02. Set the Moodle branch to downlowad code from on the next install.
-# Defaults to Moodle_39 if not set as environment variable.
+# Defaults to Moodle_311 (latest) if not set as environment variable.
 # Recommended.
 export WIRIS_MOODLE_BRANCH="MOODLE_310_STABLE"
 # Recommended.

@@ -28,8 +28,8 @@ fi
 # (parameter) Set up the Moodle version to download using the branch name convention.
 if [ -z "$WIRIS_MOODLE_BRANCH" ];
 then
-    echo '=> Warning: WIRIS_MOODLE_BRANCH environment variable is not set. Setting default to "MOODLE_39_STABLE" for this session.'
-    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+    echo '=> Warning: WIRIS_MOODLE_BRANCH environment variable is not set. Setting default to "MOODLE_311_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_311_STABLE" 
 fi
 
 # (parameter) The branch to download Moodle MathType plugins from.
@@ -107,6 +107,8 @@ if [ -d "${WIRIS_MOODLE_BRANCH}" ]; then
   # Control will enter here if $DIRECTORY exists.
   cd ${WIRIS_MOODLE_BRANCH}
   if [ -d ".git" ]; then
+    echo "=> Fetching ${WIRIS_MOODLE_BRANCH}..."
+    git fetch
     echo "=> Pulling Moodle code..."
     git checkout ${WIRIS_MOODLE_BRANCH} 
     git pull
@@ -129,6 +131,8 @@ for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
     MATHTYPE_PLUGIN="${plugin%%::*}"
     MATHTYPE_PLUGIN_TARGET="${plugin##*::}"
     if [ -d "${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}" ]; then
+        echo "=> Fetching $MATHTYPE_PLUGIN..."
+        git fetch
         echo "=> Pulling $MATHTYPE_PLUGIN..."
         cd ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
         git checkout ${WIRIS_MOODLE_MATHTYPE_BRANCH} 
@@ -147,6 +151,8 @@ for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
     QUIZZES_PLUGIN="${plugin%%::*}"
     QUIZZES_PLUGIN_TARGET="${plugin##*::}"
     if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
+        echo "=> Fetching $QUIZZES_PLUGIN..."
+        git fetch
         echo "=> Pulling $QUIZZES_PLUGIN..."
         cd ${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}
         git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
