@@ -1,0 +1,80 @@
+# Jobs: 
+# - "MathType Web Suite CI"
+
+name: MathType Web Suite CI
+
+on: 
+  - push
+  - workflow_dispatch
+  - pull_request
+
+jobs:
+  validate-commands:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: ['7.1', '7.4']
+        moodle-branch: ['MOODLE_35_STABLE', 'MOODLE_36_STABLE', 'MOODLE_37_STABLE', 'MOODLE_38_STABLE', 'MOODLE_39_STABLE', 'MOODLE_310_STABLE', 'MOODLE_311_STABLE']
+        database: [pgsql]
+        exclude:
+          # Exclude Moodle+PHP incompatible versions
+          # See: https://docs.moodle.org/dev/Moodle_and_PHP
+          - moodle-branch: 'MOODLE_38_STABLE'
+            php: '7.1'
+          - moodle-branch: 'MOODLE_39_STABLE'
+            php: '7.1'
+          - moodle-branch: 'MOODLE_310_STABLE'
+            php: '7.1'
+          - moodle-branch: 'MOODLE_311_STABLE'
+            php: '7.1'
+          - moodle-branch: 'MOODLE_310_STABLE'
+            php: '7.2'
+          - moodle-branch: 'MOODLE_311_STABLE'
+            php: '7.2'
+          - moodle-branch: 'MOODLE_35_STABLE'
+            php: '7.4'
+          - moodle-branch: 'MOODLE_36_STABLE'
+            php: '7.4'
+          - moodle-branch: 'MOODLE_37_STABLE'
+            php: '7.4'
+
+
+    steps:
+      # 1. Download this repo
+      - name: Checking out wiris-moodle-docker
+        uses: actions/checkout@v2
+
+      # # 0.2. install a specific version of Node using
+      # # https://github.com/actions/setup-node
+      # - name: Use Node.js
+      #   uses: actions/setup-node@v2
+      #   with:
+      #     node-version: 14
+
+      # # 0.3 Just so we learn about available environment variables GitHub provides
+      # - name: Print env variables
+      #   run: |
+      #     npm i -g @bahmutov/print-env
+      #     print-env GITHUB
+
+      - name: Prepare wiris-moodle-docker environment variables
+        run: |
+            echo "WEB_DOCUMENTROOT=${{github.workspace}}" >> $GITHUB_ENV
+            echo "WIRIS_MOODLE_BRANCH=${{ matrix.moodle-branch }}" >> $GITHUB_ENV
+            echo "MOODLE_DOCKER_PHP_VERSION=${{ matrix.php }}" >> $GITHUB_ENV
+            echo "MOODLE_DOCKER_DB=${{ matrix.database }}" >> $GITHUB_ENV
+            echo $WEB_DOCUMENTROOT
+
+      - name: Run wiris-moodle-docker install
+        run: |
+          bin/wiris-moodle-docker-install
+
+      - name: Run wiris-moodle-docker start
+        run: |
+          bin/wiris-moodle-docker-start
+
+      - name: Run wiris-moodle-docker test
+        run: |
+          bin/wiris-moodle-docker-test

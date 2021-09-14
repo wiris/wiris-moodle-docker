@@ -48,7 +48,7 @@ echo "=> All behat MathType tests are done."
 echo "=> 4/4: Starting phpunit environment..."
 
 # Initialize phpunit environment
-bin/moodle-docker-compose exec webserver php admin/tool/phpunit/cli/init.php
+# bin/moodle-docker-compose exec webserver php admin/tool/phpunit/cli/init.php
 echo "=> phpunit is up."
 
 # Run phpunit tests
