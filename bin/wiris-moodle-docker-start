@@ -47,19 +47,12 @@ fi
 
 # Prepare the database file to import from for a faster upgrade path.
 if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
-    WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql"
-elif [ $WIRIS_MOODLE_BRANCH = "master" ]; then
-    WIRIS_MOODLE_IMPORTED_DB=$(find databases/ -iname 'MOODLE_*.sql' |
-                               sed 's/^\([^_]*_\)\([0-9]\)\([0-9]*\)/\2.\3\t\1\2\3/' |
-                               sort -k1 -V |
-                               cut -f2- | 
-                               tail -1)    
+    WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql" 
 else
-    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_35_STABLE.sql"
+    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_311_STABLE.sql"
 fi
 
 echo "=> Setting up Database ${WIRIS_MOODLE_IMPORTED_DB}"
-
 cp ${WIRIS_MOODLE_IMPORTED_DB} /tmp/database.sql
 
 # Step02. Validations on 'moodle' and 'moodle-docker'.
