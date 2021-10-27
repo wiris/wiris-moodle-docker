@@ -146,6 +146,27 @@ $ ./bin/wiris-moodle-docker-clean
 $ ./bin/wiris-moodle-docker-delete
 ```
 
+**01.1. Run several Moodle instances**
+
+By default, the script will load a single instance. If you want to run two
+or more different versions of Moodle at the same time, you have to add this
+environment variable prior running any of the steps at `Start` section:
+
+```bash
+# Define a project name; it will appear as a prefix on container names.
+export COMPOSE_PROJECT_NAME=moodle39
+
+# Use a different public web port from those already taken.
+export MOODLE_DOCKER_WEB_PORT=1234
+
+# Define a different VNC port for the new instance. 
+export MOODLE_DOCKER_SELENIUM_VNC_PORT=5901
+
+# [..] run all "02. `Start` steps" now
+```
+
+Repeat this process and the `Start` steps for each instance. If you want to run a new instance with a diferent Moodle or PHP version you must set a new configuration before running this steps.
+
 **02. Start**
 
 It configures and starts the docker containers that will serve the Moodle instances as defined on the install step.
@@ -184,10 +205,10 @@ $ ./bin/wiris-moodle-docker-test-init
 
 # Then, you'll be able to run phpunit and behat tests of any plugin:
 # Example: Run some behat tests by @tag.
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@filter_wiris
+$ ./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@filter_wiris
 
 # Example: Run a phpunit tests
-./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
+$ ./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
 
 ```
 
@@ -268,11 +289,9 @@ Check the Moodle's project at GitHub for [a full list of Moodle versions availab
 
 ### Can I run two different Moodle instances simultaneously with this tool?
 
-No.
+Yes.
 
-One Moodle Instance only can be run at the same time with this method.
-
-You will need to update the value of the `WIRIS_MOODLE_BRANCH` variable and run `stop` + `install` + `start` commands, every time in order to switch between Moodle instances.
+You will need to repeate the 01.1 and 2 sections for each instance of moodle that you want to run.
 
 ### What is the complete list of WIRIS MathType Moodle plugins?
 

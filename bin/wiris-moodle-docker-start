@@ -72,6 +72,13 @@ fi
 echo "=> Setting up Moodle Docker configuration..."
 cd moodle-docker
 cp config.docker-template.php ${MOODLE_DOCKER_WWWROOT}/config.php
+
+# Check if the container name is set
+if [ -n "${COMPOSE_PROJECT_NAME}" ]; then
+    # Add a command on the config template to add a prefix for the cookies on the Moodle instance
+    echo -e "\n\$CFG->sessioncookie = '${COMPOSE_PROJECT_NAME}';" >> ${MOODLE_DOCKER_WWWROOT}/config.php
+fi
+
 echo "=> Configuration is set."
 
 # Start up containers
@@ -93,6 +100,12 @@ echo "=> Upgrading Moodle..."
 bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
 echo "=> Moodle upgraded."
 
+DOCKER_PORT="8000"
+
+if [ -n "${MOODLE_DOCKER_WEB_PORT}" ]; then
+    DOCKER_PORT="${MOODLE_DOCKER_WEB_PORT}"
+fi
+
 echo "==============================================================================================="
-echo "=> Build is finished. Visit your ${WIRIS_MOODLE_BRANCH} (PHP_${MOODLE_DOCKER_PHP_VERSION}) Instance at http://localhost:8000/."
+echo "=> Build is finished. Visit your ${WIRIS_MOODLE_BRANCH} (PHP_${MOODLE_DOCKER_PHP_VERSION}) Instance at http://localhost:${DOCKER_PORT}/."
 echo "==============================================================================================="
