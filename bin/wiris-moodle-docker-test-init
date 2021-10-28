@@ -32,6 +32,11 @@ if [ ! -d "moodle-docker" ]; then
     exit 1
 fi
 
+# Set up the prefix for containers based on current branch name when using multiple instances
+if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
+    export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
+fi
+
 # Step02. Initialize behat environment
 echo "=> 2/3: Starting behat environment..."
 

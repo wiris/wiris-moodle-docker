@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Script: Moodle--BehatTestsRun
+# Description: Run behat tests by @tag.
+# Params:
+# - Moodle branch version
+# - Tag
+
+echo "Setting up variables and parameters"
+
+# Get the tag parameter
+while [[ $# -gt 0 ]]; do
+    case $1 in -t|--tag)
+        tag=${2}
+        shift # past argument
+        shift # past value
+        ;;
+    esac
+done
+
+# Set up the prefix for containers based on current branch name when using multiple instances
+if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
+    export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
+    echo "=> Testing on docker container: ${COMPOSE_PROJECT_NAME}"
+fi
+
+echo "=> 1/1: Starting behat ${tag} tests..."
+# Run behat tests
+./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@$tag

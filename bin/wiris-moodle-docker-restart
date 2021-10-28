@@ -27,6 +27,11 @@ fi
 # (Moodle-docker) Set up path to Moodle code
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
+# Set up the prefix for containers based on current branch name when using multiple instances
+if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
+    export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
+fi
+
 # Step02. Shut down and destroy containers
 echo "=> Starting docker containers..."
 if [ ! -d "moodle-docker" ]; then
