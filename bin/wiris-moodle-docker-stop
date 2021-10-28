@@ -10,6 +10,10 @@
 echo "Setting up variables and parameters"
 export MOODLE_DOCKER_DB="mysql"
 
+if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
+    export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
+fi
+
 # (parameter) Path to store the Moodle code.
 if [ ! -d "$WEB_DOCUMENTROOT" ];
 then

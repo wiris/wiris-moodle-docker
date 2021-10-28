@@ -125,7 +125,7 @@ There are three groups of commands, depending on which step on the installation 
 | --------- | ------------------------------------------------------- | ----------------- |
 | `install` | Downloads the Moodle code to your computer              | `clean`, `delete` |
 | `start`   | Starts a ready-to-use Moodle instance on your computer  | `restart`, `stop` |
-| `test`    | Runs all available automated tests on behat and phpunit | `test-init`       |
+| `test`    | Runs all available automated tests on behat and phpunit | `test-init` `test-behat` `test-phpunit` |
 
 **01. Install**
 
@@ -183,12 +183,17 @@ $ ./bin/wiris-moodle-docker-test
 $ ./bin/wiris-moodle-docker-test-init
 
 # Then, you'll be able to run phpunit and behat tests of any plugin:
-# Example: Run some behat tests by @tag.
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@filter_wiris
+# Example: Run some behat tests by tag.
+$ ./bin/wiris-moodle-docker-test-behat --tag filter_wiris
 
-# Example: Run a phpunit tests
-./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
+# Example: Run a phpunit tests.
+$ ./bin/wiris-moodle-docker-test-phpunit --test manual_test.php
 
+# Or you can use these commands as moodle-docker
+# See: https://github.com/moodlehq/moodle-docker#use-containers-for-running-phpunit-tests 
+$ ./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@filter_wiris
+
+$ ./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
 ```
 
 **Using VNC to view running tests**
@@ -208,6 +213,50 @@ For example, if you set `MOODLE_DOCKER_SELENIUM_VNC_PORT` to 5900.
 > - If you want to run phpunit tests with coverage report, use command: `./moodle-docker/bin/moodle-docker-compose exec webserver phpdbg -qrr vendor/bin/phpunit --coverage-text auth_manual_testcase auth/manual/tests/manual_test.php`
 > - If `MOODLE_DOCKER_SELENIUM_VNC_PORT` is defined, selenium will expose a VNC session on the port specified so behat tests can be viewed in progress; [more information](https://github.com/moodlehq/moodle-docker#using-vnc-to-view-behat-tests).
 
+#### Run several Moodle instances simultaneously
+
+By default, the script will load a single instance. If you want to run two
+or more different versions of Moodle at the same time, you have to activate the environment variable `WIRIS_MOODLE_MULTIPLE` to `"on"`:
+
+```bash
+# Set to "on" if you want to run more than one container at the same time.
+export WIRIS_MOODLE_MULTIPLE="on"
+```
+
+**Run another instances:**
+
+If you want to run a new instance with a different Moodle or PHP version you must set new `WIRIS_MOODLE_BRANCH` and `MOODLE_DOCKER_PHP_VERSION` values, then follow the install and start commands, again.
+
+**Stop and test an instance:**
+
+If you want to stop an instance or run a test on an already started instance, change the value of the `WIRIS_MOODLE_BRANCH` variable to the corresponding instance, first.
+
+```bash
+export WIRIS_MOODLE_BRANCH="MOODLE_311_STABLE"
+
+# [..] run the stop or test commands.
+```
+
+**How the instance port is calculated:**
+
+The port exposed by each instance of Moodle is automatically configured following the next format:
+
+- The first digit is 1.
+- The next 4 digits will be based on the Moodle version.
+
+ e.g for Moodle 3.9 the exposed port will be 10039. For Moodle 3.10 the exposed port will be 10310.
+
+ VNC port follows a similar format:
+
+- The first digit is 2.
+- The next 4 digits will be based on the Moodle version.
+
+ e.g for Moodle 3.9 the exposed port will be 20039. For Moodle 3.10 the exposed port will be 20310.
+
+> **Notes:**
+> 
+> - Each version of Moodle can be instantiated only once.
+> - If you reinstantiate the same Moodle version with a different PHP, the previous Moodle instance will be deleted.
 
 ### Scripts in action
 
@@ -224,7 +273,7 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 # Starts the Moodle instance's containers, loads a dummy content db and serve it on http://localhost:8000.
 ./bin/wiris-moodle-docker-start
 
-# Work with the Moodle instance's containers (see below)
+# Work with the Moodle instance's containers (see below).
 # [..]
 
 # Shut down containers.
@@ -233,15 +282,15 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 # Restart containers; eventually, you could change the MOODLE_DOCKER_PHP_VERSION value.
 ./bin/wiris-moodle-docker-restart
 
-# Initialize all test environments
+# Initialize all test environments.
 ./bin/wiris-moodle-docker-test-init
 
 # Examples: Run behat tests
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@filter_wiris -vvv --colors
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@wiris_mathtype -vvv -colors
+./bin/wiris-moodle-docker-test-behat --tag filter_wiris
+./bin/wiris-moodle-docker-test-behat --tag wiris_mathtype
 
 # Example: Run phpunit tests
-./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
+./bin/wiris-moodle-docker-test-phpunit --test manual_test.php
 
 # All-in-one: Initialize all environments and execute all available tests.
 ./bin/wiris-moodle-docker-test
@@ -268,11 +317,9 @@ Check the Moodle's project at GitHub for [a full list of Moodle versions availab
 
 ### Can I run two different Moodle instances simultaneously with this tool?
 
-No.
+Yes.
 
-One Moodle Instance only can be run at the same time with this method.
-
-You will need to update the value of the `WIRIS_MOODLE_BRANCH` variable and run `stop` + `install` + `start` commands, every time in order to switch between Moodle instances.
+Follow the instructions on the [Run several Moodle instances simultaneously](#run-several-moodle-instances-simultaneously) section.
 
 ### What is the complete list of WIRIS MathType Moodle plugins?
 
@@ -325,8 +372,8 @@ This is the current list of available tags to help you filter which test files t
 # Make sure the test environment is initialized.
 ./bin/wiris-moodle-docker-test-init
 
-# Examples: Run behat tests
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@filter_wiris -vvv --colors
+# Examples: Run behat tests.
+./bin/wiris-moodle-docker-test-behat --tag filter_wiris
 
 ```
 

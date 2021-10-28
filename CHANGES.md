@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Last release of this project is 1.0.0 released on 6th of September 2021.
 
-<!--
 ## [Unreleased]
--->
+
+- Added multiple instance feature (18578).
 
 ## 1.0.0 - 2021-09-30
 
