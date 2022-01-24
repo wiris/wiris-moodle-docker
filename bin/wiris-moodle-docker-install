@@ -90,9 +90,22 @@ WIRIS_MOODLE_MATHTYPE_PLUGINS=(
 
 # Step02. Setup and run 'moodle-docker'.
 echo "=> 2/5: Downloading Moodle Docker containers"
-# Clone Official Moodle-docker repository
-if [ ! -d "moodle-docker" ]; then
-    # Control will enter here if $DIRECTORY doesn't exists.
+
+if [ -d "moodle-docker" ]; then
+    # Control will enter here if moodle-docker directory exists.
+    cd moodle-docker
+    if [ -d ".git" ]; then
+        echo "=> Pulling Moodle-docker code..."
+        git pull
+        echo "=> Pulled code."
+    else
+        echo "=> Cloning Moodle-docker..."
+        git clone ${MOODLE_DOCKER_SOURCE} 
+        echo "=> Cloned Moodle-docker to ./moodle-docker."
+    fi
+    cd ..
+else
+    # Control will enter here if moodle-docker directory doesn't exists.
     echo "=> Cloning Moodle-docker..."
     git clone ${MOODLE_DOCKER_SOURCE} 
     echo "=> Cloned Moodle-docker to ./moodle-docker."
@@ -104,18 +117,18 @@ echo "=> 3/5: Downloading Moodle ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWRO
 # Clone Official Moodle repository
 cd ${WEB_DOCUMENTROOT}
 if [ -d "${WIRIS_MOODLE_BRANCH}" ]; then
-  # Control will enter here if $DIRECTORY exists.
-  cd ${WIRIS_MOODLE_BRANCH}
-  if [ -d ".git" ]; then
-    echo "=> Pulling Moodle code..."
-    git checkout ${WIRIS_MOODLE_BRANCH} 
-    git pull
-    echo "=> Pulled code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
-  else
-    echo "=> Cloning Moodle code..."
-    git clone -b ${WIRIS_MOODLE_BRANCH} https://github.com/moodle/moodle.git ${WIRIS_MOODLE_BRANCH}
-    echo "=> Cloned code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
-  fi
+    # Control will enter here if $DIRECTORY exists.
+    cd ${WIRIS_MOODLE_BRANCH}
+    if [ -d ".git" ]; then
+        echo "=> Pulling Moodle code..."
+        git checkout ${WIRIS_MOODLE_BRANCH} 
+        git pull
+        echo "=> Pulled code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
+    else
+        echo "=> Cloning Moodle code..."
+        git clone -b ${WIRIS_MOODLE_BRANCH} https://github.com/moodle/moodle.git ${WIRIS_MOODLE_BRANCH}
+        echo "=> Cloned code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
+    fi
 else
     echo "=> Cloning Moodle code from scratch..."
     git clone -b ${WIRIS_MOODLE_BRANCH} https://github.com/moodle/moodle.git ${WIRIS_MOODLE_BRANCH}

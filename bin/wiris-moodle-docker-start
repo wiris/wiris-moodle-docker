@@ -118,7 +118,7 @@ echo "=> Moodle upgraded."
 DOCKER_PORT="8000"
 # Check If custom port is configured
 if [ -n "${MOODLE_DOCKER_WEB_PORT}" ]; then
-   DOCKER_PORT="${MOODLE_DOCKER_WEB_PORT}"
+    DOCKER_PORT="${MOODLE_DOCKER_WEB_PORT}"
 fi
 
 echo "==============================================================================================="

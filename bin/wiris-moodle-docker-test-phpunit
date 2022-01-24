@@ -19,7 +19,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set up the prefix for containers based on current branch name when using multiple instances
-if [ ${WIRIS_MOODLE_MULTIPLE} = "on" ]; then
+if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
     export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
     echo "=> Testing on docker container: ${COMPOSE_PROJECT_NAME}"
 fi
