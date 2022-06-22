@@ -26,4 +26,4 @@ fi
 
 echo "=> 1/1: Starting phpunit ${test} test..."
 # Run behat tests
-./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/$test
+./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit $test

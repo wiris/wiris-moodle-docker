@@ -187,13 +187,13 @@ $ ./bin/wiris-moodle-docker-test-init
 $ ./bin/wiris-moodle-docker-test-behat --tag filter_wiris
 
 # Example: Run a phpunit tests.
-$ ./bin/wiris-moodle-docker-test-phpunit --test manual_test.php
+$ ./bin/wiris-moodle-docker-test-phpunit --test auth/manual/tests/manual_test.php
 
 # Or you can use these commands as moodle-docker
 # See: https://github.com/moodlehq/moodle-docker#use-containers-for-running-phpunit-tests 
 $ ./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@filter_wiris
 
-$ ./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth_manual_testcase auth/manual/tests/manual_test.php
+$ ./moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit auth/manual/tests/manual_test.php
 ```
 
 **Using VNC to view running tests**
@@ -210,7 +210,7 @@ For example, if you set `MOODLE_DOCKER_SELENIUM_VNC_PORT` to 5900.
 > **Notes:**
 > 
 > - The behat faildump directory is exposed at http://localhost:8000/_/faildumps/.
-> - If you want to run phpunit tests with coverage report, use command: `./moodle-docker/bin/moodle-docker-compose exec webserver phpdbg -qrr vendor/bin/phpunit --coverage-text auth_manual_testcase auth/manual/tests/manual_test.php`
+> - If you want to run phpunit tests with coverage report, use command: `./moodle-docker/bin/moodle-docker-compose exec webserver phpdbg -qrr vendor/bin/phpunit --coverage-text auth/manual/tests/manual_test.php`
 > - If `MOODLE_DOCKER_SELENIUM_VNC_PORT` is defined, selenium will expose a VNC session on the port specified so behat tests can be viewed in progress; [more information](https://github.com/moodlehq/moodle-docker#using-vnc-to-view-behat-tests).
 
 #### Run several Moodle instances simultaneously
@@ -290,7 +290,7 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 ./bin/wiris-moodle-docker-test-behat --tag wiris_mathtype
 
 # Example: Run phpunit tests
-./bin/wiris-moodle-docker-test-phpunit --test manual_test.php
+./bin/wiris-moodle-docker-test-phpunit --test auth/manual/tests/manual_test.php
 
 # All-in-one: Initialize all environments and execute all available tests.
 ./bin/wiris-moodle-docker-test
