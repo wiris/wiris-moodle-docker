@@ -258,6 +258,35 @@ The port exposed by each instance of Moodle is automatically configured followin
 > - Each version of Moodle can be instantiated only once.
 > - If you reinstantiate the same Moodle version with a different PHP, the previous Moodle instance will be deleted.
 
+**04. Connect to Data Base**
+
+> Requirements: MySQL Workbench app.
+
+Connect to the Moodle Docker Data Base on the localhost:
+
+1. Create a TCP connection with the Data Base port to make it easier to access.
+
+    Add the following code on the last line of the `db.mysql.yml` file:
+
+    ```yml
+    ports:
+      - "127.0.0.1:3306:3306"
+    ```
+
+2. Open MySQL Workbench and create a new connection with the following parameters:
+
+    * **Connection Method**: Standard(TCP/IP)
+    * **Hostname**: localhost
+    * **Port**: 3306
+    * **Username**: moodle
+    * **Password**: $MYSQL_PASSWORD environment variable
+    * **Default Schema**: moodle
+
+3. Test connection and, if the test results are positive, close the configuration.
+
+4. Re-install and re-start the Wiris Moodle Docker instance. When ready open the Data Base connection.
+
+
 ### Scripts in action
 
 ```bash
