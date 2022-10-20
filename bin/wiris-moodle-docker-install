@@ -35,8 +35,8 @@ fi
 # (parameter) The branch to download Moodle MathType plugins from.
 if [ -z "$WIRIS_MOODLE_MATHTYPE_BRANCH" ];
 then
-    echo "=> Warning: WIRIS_MOODLE_MATHTYPE_BRANCH environment variable is not set. Setting default to 'stable' for this session."
-    export WIRIS_MOODLE_MATHTYPE_BRANCH="stable"
+    echo "=> Warning: WIRIS_MOODLE_MATHTYPE_BRANCH environment variable is not set. Setting default to 'main' for this session."
+    export WIRIS_MOODLE_MATHTYPE_BRANCH="main"
 else
     echo "=> Preparing to pull MathType Moodle plugins source code from '${WIRIS_MOODLE_MATHTYPE_BRANCH}' branch."
 fi
