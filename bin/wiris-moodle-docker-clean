@@ -44,6 +44,7 @@ WIRIS_MOODLE_MATHTYPE_PLUGINS=(
     'moodle-filter_wiris::filter/wiris'
     'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
     'moodle-tinymce_tiny_mce_wiris::lib/editor/tinymce/plugins/tiny_mce_wiris'
+    'moodle-tinymce6_wiris::lib/editor/tiny/plugins/wiris'
 )
 
 # Step02. Removing WIRIS Quizzes plugins.
