@@ -82,11 +82,30 @@ WIRIS_MOODLE_QUIZZES_PLUGINS=(
     'moodle-qtype_matchwiris::question/type/matchwiris'
     'moodle-qtype_essaywiris::question/type/essaywiris'
 )
-WIRIS_MOODLE_MATHTYPE_PLUGINS=(
-    'moodle-filter_wiris::filter/wiris'
-    'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
-    'moodle-tinymce_tiny_mce_wiris::lib/editor/tinymce/plugins/tiny_mce_wiris'
-)
+
+# Get the version number of the moodle branch
+MOODLE_VERSION=`echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//"`
+# Pad left tree 0 on the version number
+if [ $WIRIS_MOODLE_BRANCH != "master" ]; then
+    MOODLE_VERSION=$(printf %04d $MOODLE_VERSION)
+else 
+    MOODLE_VERSION=9999
+fi
+
+# Check if we are at a lower Moodle version than 4.0.2 to install one Tiny or the other.
+if [ $MOODLE_VERSION -lt "0402" ]; then
+    WIRIS_MOODLE_MATHTYPE_PLUGINS=(
+        'moodle-filter_wiris::filter/wiris'
+        'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
+        'moodle-tinymce_tiny_mce_wiris::lib/editor/tinymce/plugins/tiny_mce_wiris'
+    )
+else 
+    WIRIS_MOODLE_MATHTYPE_PLUGINS=(
+        'moodle-filter_wiris::filter/wiris'
+        'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
+        'moodle-tinymce6_wiris::lib/editor/tiny/plugins/wiris'
+    )
+fi
 
 # Step02. Setup and run 'moodle-docker'.
 echo "=> 2/5: Downloading Moodle Docker containers"
