@@ -109,10 +109,25 @@ fi
 
 # Step02. Setup and run 'moodle-docker'.
 echo "=> 2/5: Downloading Moodle Docker containers"
+
 # Clone Official Moodle-docker repository
-if [ ! -d "moodle-docker" ]; then
+if [ -d "moodle-docker" ]; then
     # Control will enter here if $DIRECTORY doesn't exists.
-    echo "=> Cloning Moodle-docker..."
+    cd moodle-docker
+
+    if [ -d ".git" ]; then
+        echo "=> Pulling Moodle-docker code..."
+        git pull
+        echo "=> Pulled Moodle-docker code."
+    else
+        cd ..
+        echo "=> Cloning Moodle-docker code..."
+        git clone ${MOODLE_DOCKER_SOURCE} 
+        echo "=> Cloned Moodle-docker to ./moodle-docker."
+    fi
+else
+    # Control will enter here if moodle-docker directory doesn't exists.
+    echo "=> Cloning Moodle-docker code from scratch..."
     git clone ${MOODLE_DOCKER_SOURCE} 
     echo "=> Cloned Moodle-docker to ./moodle-docker."
 fi
