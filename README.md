@@ -15,6 +15,7 @@ _This project has been created by the Wiris Engineering Team and is aimed at Moo
     - [Quick start](#quick-start)
     - [How it works](#how-it-works)
     - [Scripts in action](#scripts-in-action)
+    - [Update the PHP integration](#update-the-php-integration)
     - [Update the DB](#update-the-db)
 - [FAQ](#faq)
 - [Wiris Moodle math & science set](#wiris-moodle-math--science-plugins-set)
@@ -334,6 +335,29 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 ./bin/wiris-moodle-docker-delete
 
 ```
+
+### Update the PHP integration
+
+The [MathType Moodle filter plugin][filter] has a folder in the root called [`integration`](https://github.com/wiris/moodle-filter_wiris/tree/stable/integration) that contains a whole copy of the PHP backend of the MathType Web plugin.
+Ideally, whenever that backend is updated, it should be updated in the filter plugin repository as well.
+This section explains how to do that.
+
+1. Create a branch off the `main` branch of [filter].
+
+2. Replace the `integration` folder with the contents of the PHP backend.
+    The backend can be found, for instance, within any of the compiled plugins with PHP backend found in the GitHub [releases](https://github.com/wiris/plugins/releases) of the [plugins] repository.
+    Extract the plugin and look for the integration folder.
+    For instance, in the case of the `php-ckeditor4` plugin, the integration is the folder `php-ckeditor4-.../ckeditor_wiris/integration`.
+    Replace the `integration` folder in the filter repository with that one.
+    Commit and push.
+
+3. Let the automated Moodle tests pass on the new branch.
+    When they pass correctly, continue.
+
+4. Look for the the `thirdpartylibs.xml` file.
+    Update the `<version>` entry for the `integration` library to be the same as the version of the backend.
+
+5. Open a PR or merge directly to `main`, as appropriate.
 
 ### Update the DB
 
