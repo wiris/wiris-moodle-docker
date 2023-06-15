@@ -15,6 +15,7 @@ _This project has been created by the Wiris Engineering Team and is aimed at Moo
     - [Quick start](#quick-start)
     - [How it works](#how-it-works)
     - [Scripts in action](#scripts-in-action)
+    - [Update the DB](#update-the-db)
 - [FAQ](#faq)
 - [Wiris Moodle math & science set](#wiris-moodle-math--science-plugins-set)
 - [Technical Support or Questions](#technical-support-or-questions)
@@ -333,6 +334,20 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 ./bin/wiris-moodle-docker-delete
 
 ```
+
+### Update the DB
+
+For each new Moodle version, the database is likely to change. Some times, when we are using an old database, moodle will throw an error and we will have to update it.
+
+1. Open the latest Moodle you cna with the current databases there are on Moodle Docker project.
+
+2. Once the containers are up and the moodle running, execute the following command on the Docker container of the DB:
+    `docker exec -it CONTAINER_ID mysqldump --default-character-set=utf8mb4 --no-tablespaces -u moodle --password=m@0dl3ing -C -Q -e --create-options moodle > moodle-database.sql`
+
+3. This will create a copy of the current DB with the name `moodle-database.db`.
+
+4. You have the neew DB ready to use. In case you want to update the Moodle Docker DataBase set, move it to the database folder and rename it to the Moodle stable verions you where using when creating the dump.
+
 
 ## FAQ
 
