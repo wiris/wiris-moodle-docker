@@ -1,5 +1,3 @@
-mysqldump: [Warning] Using a password on the command line interface can be insecure.
-WARNING: --compress is deprecated and will be removed in a future version. Use --compression-algorithms instead.
 -- MySQL dump 10.13  Distrib 8.0.32, for Linux (x86_64)
 --
 -- Host: localhost    Database: moodle
