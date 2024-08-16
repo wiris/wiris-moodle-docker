@@ -109,6 +109,10 @@ export WIRIS_MOODLE_QUIZZES_BRANCH="main"
 # 03. Set the PHP version to install on the next build. 
 # Defaults to PHP7_4 if not set as environment variable.
 export MOODLE_DOCKER_PHP_VERSION="7.4"
+
+# 04. To change the default browser for behat tests. 
+# Defaults to 'chrome'. Set to 'firefox' for Firefox.
+export MOODLE_DOCKER_BROWSER="chrome"
 ```
 
 > **Note**: For more information about all these configuration settings, and a few more available, visit the [moodle-docker](https://github.com/moodlehq/moodle-docker/) documentation.
@@ -470,6 +474,15 @@ export WIRIS_MOODLE_BRANCH="MOODLE_38_STABLE"
 ./moodle-docker/bin/moodle-docker-compose exec -T db mysql -u moodle -pm@0dl3ing moodle < [YOUR-DIRECTORY]/databases/${WIRIS_MOODLE_BRANCH}.sql
 
 ```
+
+### How can change the browser for behat tests?
+
+```bash
+export MOODLE_DOCKER_BROWSER="chrome"
+
+export MOODLE_DOCKER_BROWSER="firefox"
+````
+Also, please reinstall the Moodle instance to apply the changes.
 
 ## Wiris Moodle math & science plugins set
 
