@@ -49,7 +49,7 @@ fi
 if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
     WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql" 
 else
-    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_403_STABLE.sql"
+    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_405_STABLE.sql"
 fi
 
 echo "=> Setting up Database ${WIRIS_MOODLE_IMPORTED_DB}"
