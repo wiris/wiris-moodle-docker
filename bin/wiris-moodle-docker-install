@@ -199,6 +199,42 @@ for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
     fi
 done
 
+
+if [ ${WIRIS_MOODLE_INSTALL_QUIZZESLTI} = "on" ]; then
+    echo "=> Extra: Installing WirisQuizzes LTI tool plugins to ${MOODLE_DOCKER_WWWROOT}/..."
+
+    WIRIS_MOODLE_QUIZZESLTI_PLUGINS=(
+        'moodle-enrol_quizzeslti::enrol/quizzeslti'
+        'moodle-theme_quizzeslti::theme/quizzeslti'
+        'moodle-local_quizzeslti::local/quizzeslti'
+    )
+
+        # The branch to download Moodle Quizzes plugins from.
+    if [ -z "$WIRIS_MOODLE_QUIZZESLTI_BRANCH" ];
+    then
+        echo '=> Warning: WIRIS_MOODLE_QUIZZESLTI_BRANCH environment variable is not set. Setting default to "main" for this session.'
+        export WIRIS_MOODLE_QUIZZESLTI_BRANCH="main"
+    else
+        echo '=> Preparing to pull Quizzes Moodle plugins source code from '${WIRIS_MOODLE_QUIZZESLTI_BRANCH}' branch.'
+    fi
+
+    for plugin in "${WIRIS_MOODLE_QUIZZESLTI_PLUGINS[@]}" ; do
+        QUIZZESLTI_PLUGIN="${plugin%%::*}"
+        QUIZZESLTI_PLUGIN_TARGET="${plugin##*::}"
+        if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZESLTI_PLUGIN_TARGET}" ]; then
+            echo "=> Pulling $QUIZZESLTI_PLUGIN..."
+            cd ${MOODLE_DOCKER_WWWROOT}/${QUIZZESLTI_PLUGIN_TARGET}
+            git checkout ${WIRIS_MOODLE_QUIZZESLTI_BRANCH}
+            git pull
+            cd ${MOODLE_DOCKER_WWWROOT}
+        else
+            echo "=> Cloning $QUIZZESLTI_PLUGIN..."
+            git clone -b ${WIRIS_MOODLE_QUIZZESLTI_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZESLTI_PLUGIN ${MOODLE_DOCKER_WWWROOT}/$QUIZZESLTI_PLUGIN_TARGET
+        fi
+
+    done
+fi
+
 echo "======================================================================================="
 echo "=> Install is finished. Run the 'start' command to start using your Moodle instance. <="
 echo "======================================================================================="
