@@ -100,14 +100,20 @@ echo "=> Starting docker containers..."
 bin/moodle-docker-compose up -d
 echo "=> Containers are up."
 
-# Wait for DB to come up
+# Wait for DB to come up with extended timeout
 echo "=> Waiting for container db..."
 bin/moodle-docker-wait-for-db
+
+# Additional wait time to ensure MySQL is fully initialized
+echo "=> Giving MySQL additional time to initialize..."
+sleep 10
+
 echo "=> Container db is ready."
 
 # Restore database
 echo "=> Restoring database from WIRIS backup ${WIRIS_MOODLE_IMPORTED_DB}..."
-bin/moodle-docker-compose exec -T db mysql -umoodle -pm@0dl3ing moodle < /tmp/database.sql
+
+bin/moodle-docker-compose exec -T -e MYSQL_PWD=m@0dl3ing db mysql -umoodle moodle < /tmp/database.sql
 echo "=> Database restored."
 
 echo "=> Upgrading Moodle..."
