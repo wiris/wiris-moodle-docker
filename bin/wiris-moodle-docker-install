@@ -92,8 +92,16 @@ else
     MOODLE_VERSION=9999
 fi
 
+# We check if version is 0501 when the new brach is created on Moodle git repo.
+if [ $MOODLE_VERSION == "0000" ]; then
+echo "Installing from master branch - Moodle version 5.1"
+    WIRIS_MOODLE_MATHTYPE_PLUGINS=(
+        'moodle-filter_wiris::public/filter/wiris'
+        'moodle-tinymce6_wiris::public/lib/editor/tiny/plugins/wiris'
+    )
+
 # Check if we are at a lower Moodle version than 4.0.1 to install Tiny, Tiny-legacy or both.
-if [ $MOODLE_VERSION -lt "0401" -a $MOODLE_VERSION != "0000" ]; then
+elif [ $MOODLE_VERSION -lt "0401" -a $MOODLE_VERSION != "0000" ]; then
     WIRIS_MOODLE_MATHTYPE_PLUGINS=(
         'moodle-filter_wiris::filter/wiris'
         'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
