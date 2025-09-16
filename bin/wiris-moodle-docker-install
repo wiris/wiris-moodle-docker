@@ -70,19 +70,6 @@ else
     echo '=> Preparing to pull Quizzes Moodle plugins source code from '${WIRIS_MOODLE_QUIZZES_BRANCH}' branch.'
 fi
 
-# Using this workarond since bash version on MacOS, <4, does not support associative arrays 
-# @see: https://stackoverflow.com/questions/6047648/associative-arrays-error-declare-a-invalid-option
-WIRIS_MOODLE_QUIZZES_PLUGINS=(
-    'moodle-local_wirisquizzes::local/wirisquizzes'
-    'moodle-qtype_wq::question/type/wq'
-    'moodle-qtype_truefalsewiris::question/type/truefalsewiris'
-    'moodle-qtype_shortanswerwiris::question/type/shortanswerwiris'
-    'moodle-qtype_multichoicewiris::question/type/multichoicewiris'
-    'moodle-qtype_multianswerwiris::question/type/multianswerwiris'
-    'moodle-qtype_matchwiris::question/type/matchwiris'
-    'moodle-qtype_essaywiris::question/type/essaywiris'
-)
-
 # Get the version number of the moodle branch
 MOODLE_VERSION=`echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//"`
 # Pad left tree 0 on the version number
@@ -196,19 +183,40 @@ done
 
 # Step05. Download WIRIS Quizzes plugins.
 echo "=> 5/5: Downloading WIRIS Quizzes plugins to ${MOODLE_DOCKER_WWWROOT}/ ..."
+
+if [ -d "${MOODLE_DOCKER_WWWROOT}/public" ];
+then
+    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}/public"
+else
+    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}"
+fi
+
+# Using this workarond since bash version on MacOS, <4, does not support associative arrays 
+# @see: https://stackoverflow.com/questions/6047648/associative-arrays-error-declare-a-invalid-option
+WIRIS_MOODLE_QUIZZES_PLUGINS=(
+    'moodle-local_wirisquizzes::local/wirisquizzes'
+    'moodle-qtype_wq::question/type/wq'
+    'moodle-qtype_truefalsewiris::question/type/truefalsewiris'
+    'moodle-qtype_shortanswerwiris::question/type/shortanswerwiris'
+    'moodle-qtype_multichoicewiris::question/type/multichoicewiris'
+    'moodle-qtype_multianswerwiris::question/type/multianswerwiris'
+    'moodle-qtype_matchwiris::question/type/matchwiris'
+    'moodle-qtype_essaywiris::question/type/essaywiris'
+)
+
 # Workaround to support associative arrays on bash <4 ( MacOSx )
 for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
     QUIZZES_PLUGIN="${plugin%%::*}"
     QUIZZES_PLUGIN_TARGET="${plugin##*::}"
-    if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
+    if [ -d "${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
         echo "=> Pulling $QUIZZES_PLUGIN..."
-        cd ${MOODLE_DOCKER_WWWROOT}/${QUIZZES_PLUGIN_TARGET}
+        cd ${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}
         git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
         git pull 
         cd ${MOODLE_DOCKER_WWWROOT}
     else
         echo "=> Cloning $QUIZZES_PLUGIN..."
-        git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_DOCKER_WWWROOT}/$QUIZZES_PLUGIN_TARGET
+        git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZES_PLUGIN_TARGET
     fi
 done
 
@@ -234,15 +242,15 @@ if [ -n "${WIRIS_MOODLE_INSTALL_QUIZZESLTI}" ] && [ "${WIRIS_MOODLE_INSTALL_QUIZ
     for plugin in "${WIRIS_MOODLE_QUIZZESLTI_PLUGINS[@]}" ; do
         QUIZZESLTI_PLUGIN="${plugin%%::*}"
         QUIZZESLTI_PLUGIN_TARGET="${plugin##*::}"
-        if [ -d "${MOODLE_DOCKER_WWWROOT}/${QUIZZESLTI_PLUGIN_TARGET}" ]; then
+        if [ -d "${MOODLE_PUBLIC_ROOT}/${QUIZZESLTI_PLUGIN_TARGET}" ]; then
             echo "=> Pulling $QUIZZESLTI_PLUGIN..."
-            cd ${MOODLE_DOCKER_WWWROOT}/${QUIZZESLTI_PLUGIN_TARGET}
+            cd ${MOODLE_PUBLIC_ROOT}/${QUIZZESLTI_PLUGIN_TARGET}
             git checkout ${WIRIS_MOODLE_QUIZZESLTI_BRANCH}
             git pull
             cd ${MOODLE_DOCKER_WWWROOT}
         else
             echo "=> Cloning $QUIZZESLTI_PLUGIN..."
-            git clone -b ${WIRIS_MOODLE_QUIZZESLTI_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZESLTI_PLUGIN ${MOODLE_DOCKER_WWWROOT}/$QUIZZESLTI_PLUGIN_TARGET
+            git clone -b ${WIRIS_MOODLE_QUIZZESLTI_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZESLTI_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZESLTI_PLUGIN_TARGET
         fi
 
     done
