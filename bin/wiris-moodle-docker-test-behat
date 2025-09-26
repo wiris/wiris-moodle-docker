@@ -6,6 +6,9 @@
 # - Moodle branch version
 # - Tag
 
+# Load environment variables script
+. "$(dirname "$0")/env.sh"
+
 echo "Setting up variables and parameters"
 
 # Get the tag parameter
@@ -26,4 +29,4 @@ fi
 
 echo "=> 1/1: Starting behat ${tag} tests..."
 # Run behat tests
-./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php -vvv --colors --tags=@$tag
+./moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php "${MOODLE_RELATIVE_ROOT}/admin/tool/behat/cli/run.php" -vvv --colors --tags=@$tag

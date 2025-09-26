@@ -10,6 +10,9 @@
 # - Development branch for MathType plugins.
 # - Dev mode on?
 
+# Load environment variables script
+. "$(dirname "$0")/env.sh"
+
 echo "===================================================================================="
 echo "=> Install is starting. wiris-moodle-docker: Docker Containers for Moodle Developers <="
 echo "===================================================================================="
@@ -183,13 +186,6 @@ done
 
 # Step05. Download WIRIS Quizzes plugins.
 echo "=> 5/5: Downloading WIRIS Quizzes plugins to ${MOODLE_DOCKER_WWWROOT}/ ..."
-
-if [ -d "${MOODLE_DOCKER_WWWROOT}/public" ];
-then
-    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}/public"
-else
-    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}"
-fi
 
 # Using this workarond since bash version on MacOS, <4, does not support associative arrays 
 # @see: https://stackoverflow.com/questions/6047648/associative-arrays-error-declare-a-invalid-option
