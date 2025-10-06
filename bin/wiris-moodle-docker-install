@@ -73,25 +73,7 @@ else
     echo '=> Preparing to pull Quizzes Moodle plugins source code from '${WIRIS_MOODLE_QUIZZES_BRANCH}' branch.'
 fi
 
-# Get the version number of the moodle branch
-MOODLE_VERSION=`echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//"`
-# Pad left tree 0 on the version number
-if [ $WIRIS_MOODLE_BRANCH != "master" ]; then
-    MOODLE_VERSION=$(printf %04d $MOODLE_VERSION)
-else 
-    MOODLE_VERSION=9999
-fi
-
-# We check if version is 0501 when the new brach is created on Moodle git repo.
-if [ $MOODLE_VERSION == "0000" ]; then
-echo "Installing from master branch - Moodle version 5.1"
-    WIRIS_MOODLE_MATHTYPE_PLUGINS=(
-        'moodle-filter_wiris::public/filter/wiris'
-        'moodle-tinymce6_wiris::public/lib/editor/tiny/plugins/wiris'
-    )
-
-# Check if we are at a lower Moodle version than 4.0.1 to install Tiny, Tiny-legacy or both.
-elif [ $MOODLE_VERSION -lt "0401" -a $MOODLE_VERSION != "0000" ]; then
+if [ $MOODLE_VERSION -lt "0401" -a $MOODLE_VERSION != "0000" ]; then
     WIRIS_MOODLE_MATHTYPE_PLUGINS=(
         'moodle-filter_wiris::filter/wiris'
         'moodle-atto_wiris::lib/editor/atto/plugins/wiris'
@@ -112,8 +94,8 @@ elif [ $MOODLE_VERSION -lt "0500" ]; then
     )
 else 
     WIRIS_MOODLE_MATHTYPE_PLUGINS=(
-        'moodle-filter_wiris::filter/wiris'
-        'moodle-tinymce6_wiris::lib/editor/tiny/plugins/wiris'
+        "moodle-filter_wiris::${MOODLE_RELATIVE_ROOT}/filter/wiris"
+        "moodle-tinymce6_wiris::${MOODLE_RELATIVE_ROOT}/lib/editor/tiny/plugins/wiris"
     )
 fi
 
@@ -180,6 +162,12 @@ for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
         cd ${MOODLE_DOCKER_WWWROOT}
     else
         echo "=> Cloning $MATHTYPE_PLUGIN..."
+        echo "Printing WIRIS_MOODLE_MATHTYPE_BRANCH: ${WIRIS_MOODLE_MATHTYPE_BRANCH}"
+        echo "Printing WIRIS_GIT_TRANSPORT: ${WIRIS_GIT_TRANSPORT}"
+        echo "Printing MATHTYPE_PLUGIN: ${MATHTYPE_PLUGIN}"
+        echo "Printing MOODLE_DOCKER_WWWROOT: ${MOODLE_DOCKER_WWWROOT}"
+        echo "Printing MATHTYPE_PLUGIN_TARGET: ${MATHTYPE_PLUGIN_TARGET}"
+        
         git clone -b ${WIRIS_MOODLE_MATHTYPE_BRANCH} ${WIRIS_GIT_TRANSPORT}/$MATHTYPE_PLUGIN ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
     fi
 done
@@ -215,7 +203,6 @@ for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
         git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZES_PLUGIN_TARGET
     fi
 done
-
 
 if [ -n "${WIRIS_MOODLE_INSTALL_QUIZZESLTI}" ] && [ "${WIRIS_MOODLE_INSTALL_QUIZZESLTI}" = "on" ]; then
     echo "=> Extra: Installing WirisQuizzes LTI tool plugins to ${MOODLE_DOCKER_WWWROOT}/..."
