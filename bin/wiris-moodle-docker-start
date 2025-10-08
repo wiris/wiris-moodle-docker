@@ -49,7 +49,8 @@ fi
 if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
     WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql" 
 else
-    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_405_STABLE.sql"
+    # Main branch or recently released version. Update this every time we do a SQL backup for a new Moodle release.
+    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_501_STABLE.sql"
 fi
 
 echo "=> Setting up Database ${WIRIS_MOODLE_IMPORTED_DB}"

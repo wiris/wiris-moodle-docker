@@ -3,6 +3,9 @@
 # Script: Moodle--BehatTestsInit
 # Description: Initialize behat environment.
 
+# Load environment variables script
+. "$(dirname "$0")/env.sh"
+
 echo "=> Starting phpunit & behat environments..."
 
 # Step01. Set up variables and paramaters. 
@@ -41,7 +44,7 @@ fi
 echo "=> 2/3: Starting behat environment..."
 
 cd moodle-docker
-bin/moodle-docker-compose exec webserver php admin/tool/behat/cli/init.php
+bin/moodle-docker-compose exec webserver php "${MOODLE_RELATIVE_ROOT}/admin/tool/behat/cli/init.php"
 echo "=> behat environment is up."
 
 # Run behat tests
@@ -51,7 +54,7 @@ echo "=> behat environment is up."
 echo "=> 3/3: Starting phpunit environment..."
 
 # Initialize phpunit environment
-bin/moodle-docker-compose exec webserver php admin/tool/phpunit/cli/init.php
+bin/moodle-docker-compose exec webserver php "${MOODLE_RELATIVE_ROOT}/admin/tool/phpunit/cli/init.php"
 echo "=> phpunit is up."
 
 # Run phpunit tests
