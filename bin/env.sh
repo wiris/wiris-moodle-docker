@@ -4,7 +4,7 @@
 # Get the version number of the moodle branch
 MOODLE_VERSION=`echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//"`
 # Pad left tree 0 on the version number
-if [ $WIRIS_MOODLE_BRANCH != "master" ]; then
+if [ $WIRIS_MOODLE_BRANCH != "main"  ]; then
     MOODLE_VERSION=$(printf %04d $MOODLE_VERSION)
 else 
     MOODLE_VERSION=9999
@@ -19,4 +19,4 @@ else
     MOODLE_RELATIVE_ROOT="public"
 fi
 
-echo "=> Moodle root path is set to: $MOODLE_PUBLIC_ROOT"
+echo "=> Moodle version: $MOODLE_VERSION detected. Using public root: $MOODLE_PUBLIC_ROOT"
