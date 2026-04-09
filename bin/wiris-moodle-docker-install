@@ -67,8 +67,13 @@ export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 # The branch to download Moodle Quizzes plugins from.
 if [ -z "$WIRIS_MOODLE_QUIZZES_BRANCH" ];
 then
-    echo '=> Warning: WIRIS_MOODLE_QUIZZES_BRANCH environment variable is not set. Setting default to "main" for this session.'
-    export WIRIS_MOODLE_QUIZZES_BRANCH="main"
+    if [ $MOODLE_VERSION -lt "0405" -a $MOODLE_VERSION != "0000" ]; then
+        echo '=> Warning: WIRIS_MOODLE_QUIZZES_BRANCH environment variable is not set. Setting default to "v4.14.0" for this session. As Moodle version is less than 4.5, the default branch for Quizzes plugins will be set to "v4.14.0".'
+        export WIRIS_MOODLE_QUIZZES_BRANCH="v4.14.0"
+    else
+        echo '=> Warning: WIRIS_MOODLE_QUIZZES_BRANCH environment variable is not set. Setting default to "main" for this session.'
+        export WIRIS_MOODLE_QUIZZES_BRANCH="main"
+    fi
 else
     echo '=> Preparing to pull Quizzes Moodle plugins source code from '${WIRIS_MOODLE_QUIZZES_BRANCH}' branch.'
 fi
@@ -217,7 +222,7 @@ if [ -n "${WIRIS_MOODLE_INSTALL_QUIZZESLTI}" ] && [ "${WIRIS_MOODLE_INSTALL_QUIZ
     if [ -z "$WIRIS_MOODLE_QUIZZESLTI_BRANCH" ];
     then
         echo '=> Warning: WIRIS_MOODLE_QUIZZESLTI_BRANCH environment variable is not set. Setting default to "main" for this session.'
-        export WIRIS_MOODLE_QUIZZESLTI_BRANCH="main"
+        export WIRIS_MOODLE_QUIZZESLTI_BRANCH="main" 
     else
         echo '=> Preparing to pull Quizzes Moodle plugins source code from '${WIRIS_MOODLE_QUIZZESLTI_BRANCH}' branch.'
     fi

@@ -102,7 +102,9 @@ There are some configuration settings that you may need to set from the Terminal
 export WIRIS_MOODLE_MATHTYPE_BRANCH="main" 
 
 # 02. Set the Quizzes plugins branch to downlowad code from on the next install.
-# Defaults to 'main' if not set as environment variable.
+# Defaults by Moodle version if not set as environment variable:
+# - Moodle < 4.5 => 'v4.14.0'
+# - Moodle >= 4.5 => 'main'
 # Optional, not needed.
 export WIRIS_MOODLE_QUIZZES_BRANCH="main"
 
