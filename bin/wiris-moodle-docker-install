@@ -193,13 +193,13 @@ for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
     QUIZZES_PLUGIN="${plugin%%::*}"
     QUIZZES_PLUGIN_TARGET="${plugin##*::}"
     if [ -d "${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
-        echo "=> Pulling $QUIZZES_PLUGIN..."
+        echo "=> Pulling $QUIZZES_PLUGIN from branch ${WIRIS_MOODLE_QUIZZES_BRANCH}..."
         cd ${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}
         git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
         git pull 
         cd ${MOODLE_DOCKER_WWWROOT}
     else
-        echo "=> Cloning $QUIZZES_PLUGIN..."
+        echo "=> Cloning $QUIZZES_PLUGIN from branch ${WIRIS_MOODLE_QUIZZES_BRANCH}..."
         git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZES_PLUGIN_TARGET
     fi
 done
