@@ -121,6 +121,31 @@ echo "=> Upgrading Moodle..."
 bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
 echo "=> Moodle upgraded."
 
+echo "=> Cleaning invalid adhoc tasks from imported data..."
+bin/moodle-docker-compose exec -T webserver php -r '
+define("CLI_SCRIPT", true);
+require("config.php");
+global $DB;
+
+$tasks = $DB->get_records("task_adhoc", null, "", "id,classname");
+$removed = 0;
+foreach ($tasks as $task) {
+    $classname = ltrim($task->classname, "\\");
+    if (!class_exists($classname)) {
+        $DB->delete_records("task_adhoc", ["id" => $task->id]);
+        $removed++;
+        echo "Removed invalid adhoc task #{$task->id}: {$task->classname}\n";
+    }
+}
+
+echo "Invalid adhoc tasks removed: {$removed}\n";
+'
+echo "=> Invalid adhoc tasks cleanup finished."
+
+echo "=> Running adhoc queue to complete pending migrations..."
+bin/moodle-docker-compose exec -T webserver php admin/cli/adhoc_task.php --execute --taskslimit=500
+echo "=> Adhoc queue processed."
+
 # Set the default docker port
 DOCKER_PORT="8000"
 # Check If custom port is configured
