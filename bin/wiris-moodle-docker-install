@@ -63,6 +63,15 @@ MOODLE_DOCKER_SOURCE=https://github.com/moodlehq/moodle-docker.git
 # (Moodle-docker) Set up path to Moodle code
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
+# Recompute MOODLE_PUBLIC_ROOT now that MOODLE_DOCKER_WWWROOT is set
+if [ $MOODLE_VERSION -lt "0501" ]; then
+    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}"
+    MOODLE_RELATIVE_ROOT="."
+else
+    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}/public"
+    MOODLE_RELATIVE_ROOT="public"
+fi
+
 # Set up custom development variables:
 # The branch to download Moodle Quizzes plugins from.
 if [ -z "$WIRIS_MOODLE_QUIZZES_BRANCH" ];
