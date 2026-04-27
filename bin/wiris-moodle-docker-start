@@ -38,6 +38,21 @@ export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 # (Moodle-docker) Choose a db server (Currently supported: pgsql, mariadb, mysql, mssql, oracle).
 export MOODLE_DOCKER_DB="mysql"
 
+# Determine Apache document root based on Moodle version.
+# Moodle 5.01+ serves from public/ subdirectory.
+MOODLE_VERSION_NUM=$(echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//")
+if [ "$WIRIS_MOODLE_BRANCH" != "main" ]; then
+    MOODLE_VERSION_NUM=$(printf %04d $MOODLE_VERSION_NUM)
+else
+    MOODLE_VERSION_NUM=9999
+fi
+if [ "$MOODLE_VERSION_NUM" -ge "0501" ]; then
+    export MOODLE_DOCKER_APACHE_DOCUMENT_ROOT="/var/www/html/public"
+else
+    export MOODLE_DOCKER_APACHE_DOCUMENT_ROOT="/var/www/html"
+fi
+echo "=> Apache document root: ${MOODLE_DOCKER_APACHE_DOCUMENT_ROOT}"
+
 # Set up the PHP version
 if [ -z "$MOODLE_DOCKER_PHP_VERSION" ];
 then
@@ -120,6 +135,31 @@ echo "=> Database restored."
 echo "=> Upgrading Moodle..."
 bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
 echo "=> Moodle upgraded."
+
+echo "=> Cleaning invalid adhoc tasks from imported data..."
+bin/moodle-docker-compose exec -T webserver php -r '
+define("CLI_SCRIPT", true);
+require("config.php");
+global $DB;
+
+$tasks = $DB->get_records("task_adhoc", null, "", "id,classname");
+$removed = 0;
+foreach ($tasks as $task) {
+    $classname = ltrim($task->classname, "\\");
+    if (!class_exists($classname)) {
+        $DB->delete_records("task_adhoc", ["id" => $task->id]);
+        $removed++;
+        echo "Removed invalid adhoc task #{$task->id}: {$task->classname}\n";
+    }
+}
+
+echo "Invalid adhoc tasks removed: {$removed}\n";
+'
+echo "=> Invalid adhoc tasks cleanup finished."
+
+echo "=> Running adhoc queue to complete pending migrations..."
+bin/moodle-docker-compose exec -T webserver php admin/cli/adhoc_task.php --execute --taskslimit=500
+echo "=> Adhoc queue processed."
 
 # Set the default docker port
 DOCKER_PORT="8000"

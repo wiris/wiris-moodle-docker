@@ -63,6 +63,15 @@ MOODLE_DOCKER_SOURCE=https://github.com/moodlehq/moodle-docker.git
 # (Moodle-docker) Set up path to Moodle code
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
+# Recompute MOODLE_PUBLIC_ROOT now that MOODLE_DOCKER_WWWROOT is set
+if [ $MOODLE_VERSION -lt "0501" ]; then
+    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}"
+    MOODLE_RELATIVE_ROOT="."
+else
+    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}/public"
+    MOODLE_RELATIVE_ROOT="public"
+fi
+
 # Set up custom development variables:
 # The branch to download Moodle Quizzes plugins from.
 if [ -z "$WIRIS_MOODLE_QUIZZES_BRANCH" ];
@@ -198,13 +207,13 @@ for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
     QUIZZES_PLUGIN="${plugin%%::*}"
     QUIZZES_PLUGIN_TARGET="${plugin##*::}"
     if [ -d "${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
-        echo "=> Pulling $QUIZZES_PLUGIN..."
+        echo "=> Pulling $QUIZZES_PLUGIN from branch ${WIRIS_MOODLE_QUIZZES_BRANCH}..."
         cd ${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}
         git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
         git pull 
         cd ${MOODLE_DOCKER_WWWROOT}
     else
-        echo "=> Cloning $QUIZZES_PLUGIN..."
+        echo "=> Cloning $QUIZZES_PLUGIN from branch ${WIRIS_MOODLE_QUIZZES_BRANCH}..."
         git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZES_PLUGIN_TARGET
     fi
 done
