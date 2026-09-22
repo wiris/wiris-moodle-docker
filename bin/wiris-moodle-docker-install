@@ -57,6 +57,48 @@ else
     WIRIS_GIT_TRANSPORT="https://github.com/wiris"
 fi
 
+# Resolve a requested branch independently for each WIRIS repository.
+# Specific branches are not always available in every repository,
+# so fall back to the 'main' branch when the requested one is missing.
+resolve_wiris_branch() {
+    local repository_url="$1"
+    local requested_branch="$2"
+    local repository_name="$3"
+    local remote_status
+
+    git ls-remote --exit-code --heads "$repository_url" "refs/heads/${requested_branch}" >/dev/null 2>&1
+    remote_status=$?
+    if [ "$remote_status" -eq 0 ]; then
+        printf '%s\n' "$requested_branch"
+        return 0
+    fi
+
+    if [ "$remote_status" -ne 2 ]; then
+        echo "=> Error: Could not check branch '${requested_branch}' in ${repository_name}." >&2
+        return 1
+    fi
+
+    if [ "$requested_branch" = "main" ]; then
+        echo "=> Error: Branch 'main' does not exist in ${repository_name}." >&2
+        return 1
+    fi
+
+    git ls-remote --exit-code --heads "$repository_url" "refs/heads/main" >/dev/null 2>&1
+    remote_status=$?
+    if [ "$remote_status" -eq 0 ]; then
+        echo "=> Warning: Branch '${requested_branch}' does not exist in ${repository_name}. Falling back to 'main'." >&2
+        printf '%s\n' "main"
+        return 0
+    fi
+
+    if [ "$remote_status" -eq 2 ]; then
+        echo "=> Error: Neither branch '${requested_branch}' nor 'main' exists in ${repository_name}." >&2
+    else
+        echo "=> Error: Could not check fallback branch 'main' in ${repository_name}." >&2
+    fi
+    return 1
+}
+
 # (Moodle-docker): where to download the code from; we use to have a fork.
 MOODLE_DOCKER_SOURCE=https://github.com/moodlehq/moodle-docker.git
 
@@ -168,21 +210,23 @@ echo "=> 4/5: Downloading WIRIS MathType plugins to ${MOODLE_DOCKER_WWWROOT}/ ..
 for plugin in "${WIRIS_MOODLE_MATHTYPE_PLUGINS[@]}" ; do
     MATHTYPE_PLUGIN="${plugin%%::*}"
     MATHTYPE_PLUGIN_TARGET="${plugin##*::}"
+    MATHTYPE_PLUGIN_URL="${WIRIS_GIT_TRANSPORT}/${MATHTYPE_PLUGIN}"
+    MATHTYPE_PLUGIN_BRANCH="$(resolve_wiris_branch "${MATHTYPE_PLUGIN_URL}" "${WIRIS_MOODLE_MATHTYPE_BRANCH}" "${MATHTYPE_PLUGIN}")" || exit 1
     if [ -d "${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}" ]; then
-        echo "=> Pulling $MATHTYPE_PLUGIN..."
+        echo "=> Pulling $MATHTYPE_PLUGIN from branch ${MATHTYPE_PLUGIN_BRANCH}..."
         cd ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
-        git checkout ${WIRIS_MOODLE_MATHTYPE_BRANCH} 
+        git checkout "${MATHTYPE_PLUGIN_BRANCH}"
         git pull 
         cd ${MOODLE_DOCKER_WWWROOT}
     else
-        echo "=> Cloning $MATHTYPE_PLUGIN..."
-        echo "Printing WIRIS_MOODLE_MATHTYPE_BRANCH: ${WIRIS_MOODLE_MATHTYPE_BRANCH}"
+        echo "=> Cloning $MATHTYPE_PLUGIN from branch ${MATHTYPE_PLUGIN_BRANCH}..."
+        echo "Printing WIRIS_MOODLE_MATHTYPE_BRANCH: ${MATHTYPE_PLUGIN_BRANCH}"
         echo "Printing WIRIS_GIT_TRANSPORT: ${WIRIS_GIT_TRANSPORT}"
         echo "Printing MATHTYPE_PLUGIN: ${MATHTYPE_PLUGIN}"
         echo "Printing MOODLE_DOCKER_WWWROOT: ${MOODLE_DOCKER_WWWROOT}"
         echo "Printing MATHTYPE_PLUGIN_TARGET: ${MATHTYPE_PLUGIN_TARGET}"
         
-        git clone -b ${WIRIS_MOODLE_MATHTYPE_BRANCH} ${WIRIS_GIT_TRANSPORT}/$MATHTYPE_PLUGIN ${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}
+        git clone -b "${MATHTYPE_PLUGIN_BRANCH}" "${MATHTYPE_PLUGIN_URL}" "${MOODLE_DOCKER_WWWROOT}/${MATHTYPE_PLUGIN_TARGET}"
     fi
 done
 
@@ -206,15 +250,17 @@ WIRIS_MOODLE_QUIZZES_PLUGINS=(
 for plugin in "${WIRIS_MOODLE_QUIZZES_PLUGINS[@]}" ; do
     QUIZZES_PLUGIN="${plugin%%::*}"
     QUIZZES_PLUGIN_TARGET="${plugin##*::}"
+    QUIZZES_PLUGIN_URL="${WIRIS_GIT_TRANSPORT}/${QUIZZES_PLUGIN}"
+    QUIZZES_PLUGIN_BRANCH="$(resolve_wiris_branch "${QUIZZES_PLUGIN_URL}" "${WIRIS_MOODLE_QUIZZES_BRANCH}" "${QUIZZES_PLUGIN}")" || exit 1
     if [ -d "${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}" ]; then
-        echo "=> Pulling $QUIZZES_PLUGIN from branch ${WIRIS_MOODLE_QUIZZES_BRANCH}..."
+        echo "=> Pulling $QUIZZES_PLUGIN from branch ${QUIZZES_PLUGIN_BRANCH}..."
         cd ${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}
-        git checkout ${WIRIS_MOODLE_QUIZZES_BRANCH} 
+        git checkout "${QUIZZES_PLUGIN_BRANCH}"
         git pull 
         cd ${MOODLE_DOCKER_WWWROOT}
     else
-        echo "=> Cloning $QUIZZES_PLUGIN from branch ${WIRIS_MOODLE_QUIZZES_BRANCH}..."
-        git clone -b ${WIRIS_MOODLE_QUIZZES_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZES_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZES_PLUGIN_TARGET
+        echo "=> Cloning $QUIZZES_PLUGIN from branch ${QUIZZES_PLUGIN_BRANCH}..."
+        git clone -b "${QUIZZES_PLUGIN_BRANCH}" "${QUIZZES_PLUGIN_URL}" "${MOODLE_PUBLIC_ROOT}/${QUIZZES_PLUGIN_TARGET}"
     fi
 done
 
@@ -239,15 +285,17 @@ if [ -n "${WIRIS_MOODLE_INSTALL_QUIZZESLTI}" ] && [ "${WIRIS_MOODLE_INSTALL_QUIZ
     for plugin in "${WIRIS_MOODLE_QUIZZESLTI_PLUGINS[@]}" ; do
         QUIZZESLTI_PLUGIN="${plugin%%::*}"
         QUIZZESLTI_PLUGIN_TARGET="${plugin##*::}"
+        QUIZZESLTI_PLUGIN_URL="${WIRIS_GIT_TRANSPORT}/${QUIZZESLTI_PLUGIN}"
+        QUIZZESLTI_PLUGIN_BRANCH="$(resolve_wiris_branch "${QUIZZESLTI_PLUGIN_URL}" "${WIRIS_MOODLE_QUIZZESLTI_BRANCH}" "${QUIZZESLTI_PLUGIN}")" || exit 1
         if [ -d "${MOODLE_PUBLIC_ROOT}/${QUIZZESLTI_PLUGIN_TARGET}" ]; then
-            echo "=> Pulling $QUIZZESLTI_PLUGIN..."
+            echo "=> Pulling $QUIZZESLTI_PLUGIN from branch ${QUIZZESLTI_PLUGIN_BRANCH}..."
             cd ${MOODLE_PUBLIC_ROOT}/${QUIZZESLTI_PLUGIN_TARGET}
-            git checkout ${WIRIS_MOODLE_QUIZZESLTI_BRANCH}
+            git checkout "${QUIZZESLTI_PLUGIN_BRANCH}"
             git pull
             cd ${MOODLE_DOCKER_WWWROOT}
         else
-            echo "=> Cloning $QUIZZESLTI_PLUGIN..."
-            git clone -b ${WIRIS_MOODLE_QUIZZESLTI_BRANCH} ${WIRIS_GIT_TRANSPORT}/$QUIZZESLTI_PLUGIN ${MOODLE_PUBLIC_ROOT}/$QUIZZESLTI_PLUGIN_TARGET
+            echo "=> Cloning $QUIZZESLTI_PLUGIN from branch ${QUIZZESLTI_PLUGIN_BRANCH}..."
+            git clone -b "${QUIZZESLTI_PLUGIN_BRANCH}" "${QUIZZESLTI_PLUGIN_URL}" "${MOODLE_PUBLIC_ROOT}/${QUIZZESLTI_PLUGIN_TARGET}"
         fi
 
     done
@@ -256,4 +304,3 @@ fi
 echo "======================================================================================="
 echo "=> Install is finished. Run the 'start' command to start using your Moodle instance. <="
 echo "======================================================================================="
-

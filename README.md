@@ -108,6 +108,9 @@ export WIRIS_MOODLE_MATHTYPE_BRANCH="main"
 # Optional, not needed.
 export WIRIS_MOODLE_QUIZZES_BRANCH="main"
 
+# If a requested branch is not available in an individual repository,
+# that repository falls back to its 'main' branch during installation.
+
 # 03. Set the PHP version to install on the next build. 
 # Defaults to PHP7_4 if not set as environment variable.
 export MOODLE_DOCKER_PHP_VERSION="7.4"
