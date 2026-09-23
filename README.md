@@ -118,6 +118,11 @@ export MOODLE_DOCKER_PHP_VERSION="7.4"
 # 04. To change the default browser for behat tests. 
 # Defaults to 'chrome'. Set to 'firefox' for Firefox.
 export MOODLE_DOCKER_BROWSER="chrome"
+
+# 05. Control how the database is initialized when running 'start'.
+# Defaults to 'dump' to restore the bundled dummy-content database.
+# Set to 'fresh' to run Moodle's install_database.php on an empty database.
+export WIRIS_MOODLE_DB_MODE="dump"
 ```
 
 > **Note**: For more information about all these configuration settings, and a few more available, visit the [moodle-docker](https://github.com/moodlehq/moodle-docker/) documentation.
@@ -310,7 +315,12 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 # Downloads Moodle, Moodle-docker and WIRIS plugins source code to $WEB_DOCUMENTROOT.
 ./bin/wiris-moodle-docker-install
 
-# Starts the Moodle instance's containers, loads a dummy content db and serve it on http://localhost:8000.
+# Starts the Moodle instance's containers.
+# By default it loads the dummy-content database and serves it on http://localhost:8000.
+./bin/wiris-moodle-docker-start
+
+# Starts the Moodle instance with a fresh Moodle installation on an empty database.
+export WIRIS_MOODLE_DB_MODE="fresh"
 ./bin/wiris-moodle-docker-start
 
 # Work with the Moodle instance's containers (see below).
@@ -344,6 +354,31 @@ export MOODLE_DOCKER_PHP_VERSION="7.1"
 ./bin/wiris-moodle-docker-delete
 
 ```
+
+### Database initialization modes
+
+The `./bin/wiris-moodle-docker-start` script supports two database initialization modes through the `WIRIS_MOODLE_DB_MODE` environment variable:
+
+* `dump` (default): restores the bundled SQL dump with dummy content and then runs Moodle upgrade tasks.
+* `fresh`: skips the SQL import and runs Moodle's `admin/cli/install_database.php` against an empty database.
+
+When using `fresh`, these optional environment variables control the installed site values:
+
+* `WIRIS_MOODLE_SITE_FULLNAME` default: `Clean Moodle`
+* `WIRIS_MOODLE_SITE_SHORTNAME` default: `clean_moodle`
+* `WIRIS_MOODLE_ADMIN_USER` default: `admin`
+* `WIRIS_MOODLE_ADMIN_PASSWORD` default: `admin@A1`
+* `WIRIS_MOODLE_ADMIN_EMAIL` default: `admin@example.com`
+
+Example:
+
+```bash
+./bin/wiris-moodle-docker-clean
+export WIRIS_MOODLE_DB_MODE="fresh"
+./bin/wiris-moodle-docker-start
+```
+
+Use `fresh` together with `./bin/wiris-moodle-docker-clean` if you want a vanilla Moodle source tree and a fresh database. If the WIRIS plugin code is still present in the checkout, Moodle will install those plugins during the fresh installation.
 
 ### Update the PHP integration
 

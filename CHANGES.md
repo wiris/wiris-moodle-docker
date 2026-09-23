@@ -12,6 +12,7 @@ Last release of this project is 1.0.0 released on 6th of September 2021.
 ## [Unreleased]
 
 - Added multiple instance feature (18578).
+- Added `WIRIS_MOODLE_DB_MODE` to let `wiris-moodle-docker-start` choose between restoring the dummy SQL dump and running a fresh Moodle installation.
 
 ## 1.0.0 - 2021-09-30
 
