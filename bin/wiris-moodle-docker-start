@@ -60,16 +60,39 @@ then
     export MOODLE_DOCKER_PHP_VERSION="7.4"
 fi
 
-# Prepare the database file to import from for a faster upgrade path.
-if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
-    WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql" 
-else
-    # Main branch or recently released version. Update this every time we do a SQL backup for a new Moodle release.
-    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_501_STABLE.sql"
+if [ -z "$WIRIS_MOODLE_DB_MODE" ];
+then
+    export WIRIS_MOODLE_DB_MODE="dump"
 fi
 
-echo "=> Setting up Database ${WIRIS_MOODLE_IMPORTED_DB}"
-cp ${WIRIS_MOODLE_IMPORTED_DB} /tmp/database.sql
+WIRIS_MOODLE_DB_MODE=$(echo "${WIRIS_MOODLE_DB_MODE}" | tr '[:upper:]' '[:lower:]')
+
+case "${WIRIS_MOODLE_DB_MODE}" in
+    dump)
+        # Prepare the database file to import from for a faster upgrade path.
+        if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
+            WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql"
+        else
+            # Main branch or recently released version. Update this every time we do a SQL backup for a new Moodle release.
+            WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_501_STABLE.sql"
+        fi
+
+        echo "=> Setting up Database ${WIRIS_MOODLE_IMPORTED_DB}"
+        cp ${WIRIS_MOODLE_IMPORTED_DB} /tmp/database.sql
+        ;;
+    fresh)
+        export WIRIS_MOODLE_SITE_FULLNAME="${WIRIS_MOODLE_SITE_FULLNAME:-Clean Moodle}"
+        export WIRIS_MOODLE_SITE_SHORTNAME="${WIRIS_MOODLE_SITE_SHORTNAME:-clean_moodle}"
+        export WIRIS_MOODLE_ADMIN_USER="${WIRIS_MOODLE_ADMIN_USER:-admin}"
+        export WIRIS_MOODLE_ADMIN_PASSWORD="${WIRIS_MOODLE_ADMIN_PASSWORD:-admin@A1}"
+        export WIRIS_MOODLE_ADMIN_EMAIL="${WIRIS_MOODLE_ADMIN_EMAIL:-admin@example.com}"
+        echo "=> Setting up fresh database installation."
+        ;;
+    *)
+        echo "=> Error: unsupported WIRIS_MOODLE_DB_MODE '${WIRIS_MOODLE_DB_MODE}'. Allowed values: dump, fresh."
+        exit 1
+        ;;
+esac
 
 if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
     export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
@@ -126,18 +149,18 @@ sleep 10
 
 echo "=> Container db is ready."
 
-# Restore database
-echo "=> Restoring database from WIRIS backup ${WIRIS_MOODLE_IMPORTED_DB}..."
+if [ "${WIRIS_MOODLE_DB_MODE}" = "dump" ]; then
+    echo "=> Restoring database from WIRIS backup ${WIRIS_MOODLE_IMPORTED_DB}..."
 
-bin/moodle-docker-compose exec -T -e MYSQL_PWD=m@0dl3ing db mysql -umoodle moodle < /tmp/database.sql
-echo "=> Database restored."
+    bin/moodle-docker-compose exec -T -e MYSQL_PWD=m@0dl3ing db mysql -umoodle moodle < /tmp/database.sql
+    echo "=> Database restored."
 
-echo "=> Upgrading Moodle..."
-bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
-echo "=> Moodle upgraded."
+    echo "=> Upgrading Moodle..."
+    bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
+    echo "=> Moodle upgraded."
 
-echo "=> Cleaning invalid adhoc tasks from imported data..."
-bin/moodle-docker-compose exec -T webserver php -r '
+    echo "=> Cleaning invalid adhoc tasks from imported data..."
+    bin/moodle-docker-compose exec -T webserver php -r '
 define("CLI_SCRIPT", true);
 require("config.php");
 global $DB;
@@ -155,11 +178,22 @@ foreach ($tasks as $task) {
 
 echo "Invalid adhoc tasks removed: {$removed}\n";
 '
-echo "=> Invalid adhoc tasks cleanup finished."
+    echo "=> Invalid adhoc tasks cleanup finished."
 
-echo "=> Running adhoc queue to complete pending migrations..."
-bin/moodle-docker-compose exec -T webserver php admin/cli/adhoc_task.php --execute --taskslimit=500
-echo "=> Adhoc queue processed."
+    echo "=> Running adhoc queue to complete pending migrations..."
+    bin/moodle-docker-compose exec -T webserver php admin/cli/adhoc_task.php --execute --taskslimit=500
+    echo "=> Adhoc queue processed."
+else
+    echo "=> Installing a fresh Moodle database..."
+    bin/moodle-docker-compose exec -T webserver php admin/cli/install_database.php \
+        --agree-license \
+        --fullname="${WIRIS_MOODLE_SITE_FULLNAME}" \
+        --shortname="${WIRIS_MOODLE_SITE_SHORTNAME}" \
+        --adminuser="${WIRIS_MOODLE_ADMIN_USER}" \
+        --adminpass="${WIRIS_MOODLE_ADMIN_PASSWORD}" \
+        --adminemail="${WIRIS_MOODLE_ADMIN_EMAIL}"
+    echo "=> Fresh Moodle installation completed."
+fi
 
 # Set the default docker port
 DOCKER_PORT="8000"
