@@ -25,7 +25,7 @@ then
     exit 1
 fi
 
-# Set up the Moodle version to download using the branch name convention.
+# Set up the Moodle branch or tag to use.
 if [ -z "$WIRIS_MOODLE_BRANCH" ];
 then
     echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_39_STABLE" for this session.'
@@ -35,18 +35,15 @@ fi
 # (Moodle-docker) Set up path to Moodle code
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
+# Load normalized Moodle version details for branches and release tags.
+. "$(dirname "$0")/env.sh"
+
 # (Moodle-docker) Choose a db server (Currently supported: pgsql, mariadb, mysql, mssql, oracle).
 export MOODLE_DOCKER_DB="mysql"
 
 # Determine Apache document root based on Moodle version.
 # Moodle 5.01+ serves from public/ subdirectory.
-MOODLE_VERSION_NUM=$(echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//")
-if [ "$WIRIS_MOODLE_BRANCH" != "main" ]; then
-    MOODLE_VERSION_NUM=$(printf %04d $MOODLE_VERSION_NUM)
-else
-    MOODLE_VERSION_NUM=9999
-fi
-if [ "$MOODLE_VERSION_NUM" -ge "0501" ]; then
+if [ "$MOODLE_VERSION" -ge "0501" ]; then
     export MOODLE_DOCKER_APACHE_DOCUMENT_ROOT="/var/www/html/public"
 else
     export MOODLE_DOCKER_APACHE_DOCUMENT_ROOT="/var/www/html"
@@ -65,7 +62,7 @@ if [ -e "databases/${WIRIS_MOODLE_BRANCH}.sql" ]; then
     WIRIS_MOODLE_IMPORTED_DB="databases/${WIRIS_MOODLE_BRANCH}.sql" 
 else
     # Main branch or recently released version. Update this every time we do a SQL backup for a new Moodle release.
-    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_501_STABLE.sql"
+    WIRIS_MOODLE_IMPORTED_DB="databases/MOODLE_502_STABLE.sql"
 fi
 
 echo "=> Setting up Database ${WIRIS_MOODLE_IMPORTED_DB}"
@@ -75,14 +72,10 @@ if [[ ${WIRIS_MOODLE_MULTIPLE} = "on" ]]; then
     export COMPOSE_PROJECT_NAME=${WIRIS_MOODLE_BRANCH}
 
     echo "=> Setting Multiple instance docker container: ${COMPOSE_PROJECT_NAME}"
-    # Get the version number of the moodle branch
-    MOODLE_VERSION=`echo ${WIRIS_MOODLE_BRANCH} | sed "s/MOODLE_//" | sed "s/_STABLE//"`
-    # Pad left tree 0 on the version number
-    MOODLE_VERSION=$(printf %04d $MOODLE_VERSION)
-    # Get the 5 digits MOODLE_DOCKER_WEB_PORT: 1 + MOODLE_VERSION 
-    export MOODLE_DOCKER_WEB_PORT="1`echo ${MOODLE_VERSION}`"
+    # Get the 5 digits MOODLE_DOCKER_WEB_PORT: 1 + MOODLE_VERSION
+    export MOODLE_DOCKER_WEB_PORT="1${MOODLE_VERSION}"
     # Get the 5 digits MOODLE_DOCKER_SELENIUM_VNC_PORT: 2 + MOODLE_VERSION
-    export MOODLE_DOCKER_SELENIUM_VNC_PORT="2`echo ${MOODLE_VERSION}`"
+    export MOODLE_DOCKER_SELENIUM_VNC_PORT="2${MOODLE_VERSION}"
     echo "=> VNC Port for this instance ${MOODLE_DOCKER_SELENIUM_VNC_PORT}"
 fi
 
@@ -103,8 +96,9 @@ fi
 echo "=> Setting up Moodle Docker configuration..."
 
 cp config.docker-template.php ${MOODLE_DOCKER_WWWROOT}/config.php
-# Change the cookies_prefix on the configuration file.
-sed -i "s/cookies_prefix/${WIRIS_MOODLE_BRANCH}/" ${MOODLE_DOCKER_WWWROOT}/config.php
+# Keep Moodle's session cookie name valid for branch and tag refs.
+MOODLE_COOKIE_PREFIX=$(printf '%s' "$WIRIS_MOODLE_BRANCH" | tr -c '[:alnum:]_' '_')
+sed -i "s/cookies_prefix/${MOODLE_COOKIE_PREFIX}/" ${MOODLE_DOCKER_WWWROOT}/config.php
 
 cd moodle-docker
 
@@ -126,14 +120,16 @@ sleep 10
 
 echo "=> Container db is ready."
 
-# Restore database
-echo "=> Restoring database from WIRIS backup ${WIRIS_MOODLE_IMPORTED_DB}..."
+# Restore a clean seed before upgrading to the selected Moodle ref.
+echo "=> Resetting Moodle database before restore..."
+bin/moodle-docker-compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -e "DROP DATABASE IF EXISTS $MYSQL_DATABASE; CREATE DATABASE $MYSQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"' || exit 1
 
-bin/moodle-docker-compose exec -T -e MYSQL_PWD=m@0dl3ing db mysql -umoodle moodle < /tmp/database.sql
+echo "=> Restoring database from WIRIS backup ${WIRIS_MOODLE_IMPORTED_DB}..."
+bin/moodle-docker-compose exec -T -e MYSQL_PWD=m@0dl3ing db mysql -umoodle moodle < /tmp/database.sql || exit 1
 echo "=> Database restored."
 
 echo "=> Upgrading Moodle..."
-bin/moodle-docker-compose  exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable
+bin/moodle-docker-compose exec -T webserver php admin/cli/upgrade.php --non-interactive --allow-unstable || exit 1
 echo "=> Moodle upgraded."
 
 echo "=> Cleaning invalid adhoc tasks from imported data..."

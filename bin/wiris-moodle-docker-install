@@ -5,13 +5,10 @@
 #              It downloads the Moodle LMS, WIRIS Quizzes and WIRIS MathType 
 #              plugins source code from github.  
 # Params:
-# - Moodle version, (using Moodle's github project branch nomenclature)
+# - Moodle branch or release tag from the Moodle GitHub project
 # - PHP version.
 # - Development branch for MathType plugins.
 # - Dev mode on?
-
-# Load environment variables script
-. "$(dirname "$0")/env.sh"
 
 echo "===================================================================================="
 echo "=> Install is starting. wiris-moodle-docker: Docker Containers for Moodle Developers <="
@@ -105,14 +102,8 @@ MOODLE_DOCKER_SOURCE=https://github.com/moodlehq/moodle-docker.git
 # (Moodle-docker) Set up path to Moodle code
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
-# Recompute MOODLE_PUBLIC_ROOT now that MOODLE_DOCKER_WWWROOT is set
-if [ $MOODLE_VERSION -lt "0501" ]; then
-    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}"
-    MOODLE_RELATIVE_ROOT="."
-else
-    MOODLE_PUBLIC_ROOT="${MOODLE_DOCKER_WWWROOT}/public"
-    MOODLE_RELATIVE_ROOT="public"
-fi
+# Load environment variables now that the Moodle ref and installation path are known.
+. "$(dirname "$0")/env.sh"
 
 # Set up custom development variables:
 # The branch to download Moodle Quizzes plugins from.
@@ -189,18 +180,21 @@ if [ -d "${WIRIS_MOODLE_BRANCH}" ]; then
   # Control will enter here if $DIRECTORY exists.
   cd ${WIRIS_MOODLE_BRANCH}
   if [ -d ".git" ]; then
-    echo "=> Pulling Moodle code..."
-    git checkout ${WIRIS_MOODLE_BRANCH} 
-    git pull
-    echo "=> Pulled code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
+    echo "=> Updating Moodle code..."
+    git fetch --tags || exit 1
+    git checkout "${WIRIS_MOODLE_BRANCH}" || exit 1
+    if git symbolic-ref --quiet HEAD >/dev/null; then
+        git pull || exit 1
+    fi
+    echo "=> Updated code from ${WIRIS_MOODLE_BRANCH} at ${MOODLE_DOCKER_WWWROOT}/."
   else
     echo "=> Cloning Moodle code..."
-    git clone -b ${WIRIS_MOODLE_BRANCH} https://github.com/moodle/moodle.git ${WIRIS_MOODLE_BRANCH}
+    git clone -b "${WIRIS_MOODLE_BRANCH}" https://github.com/moodle/moodle.git "${WIRIS_MOODLE_BRANCH}"
     echo "=> Cloned code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
   fi
 else
     echo "=> Cloning Moodle code from scratch..."
-    git clone -b ${WIRIS_MOODLE_BRANCH} https://github.com/moodle/moodle.git ${WIRIS_MOODLE_BRANCH}
+    git clone -b "${WIRIS_MOODLE_BRANCH}" https://github.com/moodle/moodle.git "${WIRIS_MOODLE_BRANCH}"
     echo "=> Cloned code from ${WIRIS_MOODLE_BRANCH} to ${MOODLE_DOCKER_WWWROOT}/."
 fi
 
