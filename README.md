@@ -40,7 +40,7 @@ This tool depends heavily on [moodle-docker: Docker Containers for Moodle Develo
 * Catch-all smtp server and web interface to messages using MailHog.
 * All PHP Extensions enabled configured for external services (e.g. solr, ldap)
 * Downloads code from github with both `ssh` or `https`.
-* Uses the branch name as source to download Moodle and WIRIS plugins.
+* Downloads Moodle from a branch or release tag, and WIRIS plugins from their selected branches.
 * Support both Linux and MacOS; (Windows, coming soon).
 
 ## User's guide
@@ -73,7 +73,7 @@ We recommend you to add these values to your `.bashrc` file, so you don't need t
 # Required. 
 export WEB_DOCUMENTROOT=/path/to/source/code
 
-# 02. Set the Moodle branch to downlowad code from on the next install.
+# 02. Set the Moodle branch or release tag to download on the next install.
 # Defaults to Moodle_39 if not set as environment variable.
 # Recommended.
 export WIRIS_MOODLE_BRANCH="MOODLE_310_STABLE"
@@ -159,7 +159,7 @@ $ ./bin/wiris-moodle-docker-delete
 
 **02. Start**
 
-It configures and starts the docker containers that will serve the Moodle instances as defined on the install step.
+It configures and starts the docker containers that will serve the Moodle instances as defined on the install step. Each start recreates the database from the selected WIRIS backup and upgrades it to the selected Moodle ref. The upgraded database persists through container restarts and stops; the next start restores the backup again.
 
 ```bash
 # Set a PHP version of your choice for this session.
@@ -390,7 +390,7 @@ For each new Moodle version, the database is likely to change. Some times, when 
 
 ### Which versions of Moodle can I install?
 
-Check the Moodle's project at GitHub for [a full list of Moodle versions available](https://github.com/moodle/moodle/branches/all) using the Git branch name to set the environment variable, like `export WIRIS_MOODLE_BRANCH="MOODLE_311_STABLE"`. 
+Set WIRIS_MOODLE_BRANCH to a Moodle branch or release tag from the [branches](https://github.com/moodle/moodle/branches/all) or [tags](https://github.com/moodle/moodle/tags) page, for example, MOODLE_311_STABLE or v5.1.0.
 
 ### Can I run two different Moodle instances simultaneously with this tool?
 
