@@ -28,8 +28,8 @@ fi
 # Set up the Moodle branch or tag to use.
 if [ -z "$WIRIS_MOODLE_BRANCH" ];
 then
-    echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_39_STABLE" for this session.'
-    export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE" 
+    echo '=> Warning: $WIRIS_MOODLE_BRANCH is not set. Setting default to "MOODLE_503_STABLE" for this session.'
+    export WIRIS_MOODLE_BRANCH="MOODLE_503_STABLE" 
 fi
 
 # (Moodle-docker) Set up path to Moodle code
@@ -53,8 +53,8 @@ echo "=> Apache document root: ${MOODLE_DOCKER_APACHE_DOCUMENT_ROOT}"
 # Set up the PHP version
 if [ -z "$MOODLE_DOCKER_PHP_VERSION" ];
 then
-    echo '=> Warning: MOODLE_DOCKER_PHP_VERSION is not set. Setting default to "7.4" for this session.'
-    export MOODLE_DOCKER_PHP_VERSION="7.4"
+    echo '=> Warning: MOODLE_DOCKER_PHP_VERSION is not set. Setting default to "8.3" for this session.'
+    export MOODLE_DOCKER_PHP_VERSION="8.3"
 fi
 
 # Prepare the database file to import from for a faster upgrade path.

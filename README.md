@@ -74,9 +74,9 @@ We recommend you to add these values to your `.bashrc` file, so you don't need t
 export WEB_DOCUMENTROOT=/path/to/source/code
 
 # 02. Set the Moodle branch or release tag to download on the next install.
-# Defaults to Moodle_39 if not set as environment variable.
+# Defaults to Moodle 5.3 LTS if not set as environment variable.
 # Recommended.
-export WIRIS_MOODLE_BRANCH="MOODLE_310_STABLE"
+export WIRIS_MOODLE_BRANCH="MOODLE_503_STABLE"
 # Recommended.
 export MOODLE_DOCKER_WWWROOT=${WEB_DOCUMENTROOT}/${WIRIS_MOODLE_BRANCH}
 
@@ -112,8 +112,8 @@ export WIRIS_MOODLE_QUIZZES_BRANCH="main"
 # that repository falls back to its 'main' branch during installation.
 
 # 03. Set the PHP version to install on the next build. 
-# Defaults to PHP7_4 if not set as environment variable.
-export MOODLE_DOCKER_PHP_VERSION="7.4"
+# Defaults to PHP 8.3 if not set as environment variable.
+export MOODLE_DOCKER_PHP_VERSION="8.3"
 
 # 04. To change the default browser for behat tests. 
 # Defaults to 'chrome'. Set to 'firefox' for Firefox.
@@ -144,7 +144,7 @@ Install downloads all the necessary files and dependencies to your local compute
 
 ```bash
 # Set a Moodle version of your choice for this session.
-export WIRIS_MOODLE_BRANCH="MOODLE_39_STABLE"
+export WIRIS_MOODLE_BRANCH="MOODLE_503_STABLE"
 
 # Let's download everything from git.
 $ ./bin/wiris-moodle-docker-install
